@@ -1,0 +1,3219 @@
+{
+  "6-3": {
+    "name": "Computer Science and Engineering",
+    "department": "6",
+    "total_units_beyond_girs": "180-198",
+    "required_courses": [
+      "6.1010",
+      "6.1020",
+      "6.1200",
+      "6.1210",
+      "6.1903",
+      "6.1910"
+    ],
+    "select_groups": [
+      {
+        "name": "Introductory Programming",
+        "pick": 1,
+        "courses": [
+          "6.1000",
+          "6.100A"
+        ]
+      },
+      {
+        "name": "Theory Requirement",
+        "pick": 1,
+        "courses": [
+          "6.1400",
+          "6.1220"
+        ]
+      },
+      {
+        "name": "Systems Requirement",
+        "pick": 1,
+        "courses": [
+          "6.1800",
+          "6.1810",
+          "6.5831"
+        ]
+      },
+      {
+        "name": "Probability/Linear Algebra",
+        "pick": 1,
+        "courses": [
+          "6.3700",
+          "6.3800",
+          "18.05",
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "CS Track Electives",
+        "pick": 2,
+        "notes": "Two subjects from one Computer Science track",
+        "courses": [
+          "6.1040",
+          "6.1060",
+          "6.1100",
+          "6.1120",
+          "6.5151",
+          "6.1400",
+          "6.1220",
+          "6.5340",
+          "6.8410",
+          "6.1800",
+          "6.1810",
+          "6.1820",
+          "6.1830",
+          "6.1850",
+          "6.5831",
+          "6.5840",
+          "6.3260",
+          "6.3950",
+          "6.4590",
+          "6.C35",
+          "6.C40"
+        ]
+      },
+      {
+        "name": "CS/AI+D/EE Track Electives",
+        "pick": 2,
+        "notes": "Two subjects from any CS, AI+D, or EE track",
+        "courses": [
+          "6.1040",
+          "6.1060",
+          "6.1100",
+          "6.1120",
+          "6.5151",
+          "6.1400",
+          "6.1220",
+          "6.5340",
+          "6.8410",
+          "6.1800",
+          "6.1810",
+          "6.1820",
+          "6.1830",
+          "6.1850",
+          "6.5831",
+          "6.5840",
+          "6.3260",
+          "6.3950",
+          "6.4590",
+          "6.C35",
+          "6.C40",
+          "6.3000",
+          "6.3100",
+          "6.3720",
+          "6.3730",
+          "6.3900",
+          "6.4100",
+          "6.4110",
+          "6.4120",
+          "6.4200",
+          "6.4210",
+          "6.4400",
+          "6.4420",
+          "6.C571",
+          "6.C01",
+          "6.5931",
+          "6.7411",
+          "6.8301",
+          "6.8371",
+          "6.8611",
+          "6.8701",
+          "6.8711",
+          "18.404",
+          "6.2000",
+          "6.2040",
+          "6.2050",
+          "6.2060",
+          "6.2080",
+          "6.2200",
+          "6.2300",
+          "6.2400",
+          "6.2500",
+          "6.2530"
+        ]
+      },
+      {
+        "name": "Cross-major Elective",
+        "pick": 1,
+        "notes": "One subject that satisfies a degree requirement in 6-3, 6-4, 6-5, or 18",
+        "courses": []
+      }
+    ],
+    "ci_m_courses": [
+      "6.1020",
+      "6.1040",
+      "6.1800",
+      "6.1850",
+      "6.4200",
+      "6.4210",
+      "6.4590",
+      "6.8301",
+      "6.8611",
+      "6.UAR",
+      "6.UAT",
+      "6.2040",
+      "6.2050",
+      "6.2060",
+      "6.2370"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "6.1910",
+        "6.1200"
+      ],
+      "lab": [
+        "6.1010"
+      ],
+      "hass": [
+        "6.3260",
+        "6.4590"
+      ]
+    },
+    "notes": "Out of elective subjects, at least two must be Advanced Undergraduate Subjects, and at least one must be an Independent Inquiry subject. See EECS tracks page for track groupings."
+  },
+  "6-4": {
+    "name": "Artificial Intelligence and Decision Making",
+    "department": "6",
+    "total_units_beyond_girs": "180-189",
+    "required_courses": [
+      "6.1010",
+      "6.1200",
+      "6.1210",
+      "18.C06"
+    ],
+    "select_groups": [
+      {
+        "name": "Introductory Programming",
+        "pick": 1,
+        "courses": [
+          "6.1000",
+          "6.100A"
+        ]
+      },
+      {
+        "name": "Linear Algebra",
+        "pick": 1,
+        "courses": [
+          "18.C06",
+          "18.06"
+        ]
+      },
+      {
+        "name": "Probability/Inference",
+        "pick": 1,
+        "courses": [
+          "6.3700",
+          "6.3800",
+          "18.05"
+        ]
+      },
+      {
+        "name": "Centers - Data-centric",
+        "pick_from_centers": true,
+        "pick": 1,
+        "notes": "Must take at least one from each of the 5 center areas (5 total). Some courses appear in multiple centers but can only count for one.",
+        "courses": [
+          "6.3720",
+          "6.3900",
+          "6.C01"
+        ]
+      },
+      {
+        "name": "Centers - Model-centric",
+        "pick": 1,
+        "courses": [
+          "6.3000",
+          "6.3100",
+          "6.4110",
+          "6.4420",
+          "6.4400"
+        ]
+      },
+      {
+        "name": "Centers - Decision-centric",
+        "pick": 1,
+        "courses": [
+          "6.3100",
+          "6.4110",
+          "6.C571"
+        ]
+      },
+      {
+        "name": "Centers - Computation-centric",
+        "pick": 1,
+        "courses": [
+          "6.1220",
+          "6.1400",
+          "6.4400",
+          "6.C571"
+        ]
+      },
+      {
+        "name": "Centers - Human-centric",
+        "pick": 1,
+        "courses": [
+          "6.3260",
+          "6.3950",
+          "6.4120",
+          "6.4590",
+          "6.C35"
+        ]
+      },
+      {
+        "name": "Application CI-M",
+        "pick": 1,
+        "courses": [
+          "6.4200",
+          "6.4210",
+          "6.8611"
+        ]
+      },
+      {
+        "name": "AI+D Advanced Undergraduate Elective",
+        "pick": 1,
+        "courses": [
+          "6.3020",
+          "6.3730",
+          "6.4210",
+          "6.4300",
+          "6.5151",
+          "6.5831",
+          "6.5931",
+          "6.7411",
+          "6.8371",
+          "6.8611",
+          "6.8701",
+          "6.8711",
+          "6.8801",
+          "18.404"
+        ]
+      },
+      {
+        "name": "Cross-department Elective",
+        "pick": 1,
+        "notes": "One subject that satisfies a degree requirement in Course 6 or Course 18",
+        "courses": []
+      }
+    ],
+    "ci_m_courses": [
+      "6.4200",
+      "6.4210",
+      "6.8611",
+      "6.8301",
+      "6.4590",
+      "6.C35",
+      "6.UAR",
+      "6.UAT",
+      "6.2040",
+      "6.2050",
+      "6.2060",
+      "6.2370"
+    ],
+    "ci_m_required": 2,
+    "serc_courses": [
+      "6.3900",
+      "6.3950",
+      "6.4300",
+      "6.4590",
+      "6.8611",
+      "6.C01",
+      "6.C40"
+    ],
+    "serc_required": 1,
+    "gir_double_counts": {
+      "rest": [
+        "6.1200",
+        "18.C06"
+      ],
+      "lab": [
+        "6.1010"
+      ]
+    },
+    "notes": "6.4110 can count toward model-centric or decision-centric but not both. 6.4400 can count toward model-centric or computation-centric but not both. 6.C571 can count toward decision-centric or computation-centric but not both. Must satisfy SERC requirement with at least one qualifying subject."
+  },
+  "6-7": {
+    "name": "Computer Science and Molecular Biology",
+    "department": "6/7",
+    "total_units_beyond_girs": "192-198",
+    "required_courses": [
+      "6.100A",
+      "6.1200",
+      "6.C06",
+      "5.12",
+      "5.601",
+      "6.1010",
+      "6.1210",
+      "6.3900",
+      "7.03",
+      "7.05",
+      "7.06"
+    ],
+    "select_groups": [
+      {
+        "name": "Introductory Laboratory",
+        "pick": 1,
+        "courses": [
+          "7.002",
+          "20.109"
+        ]
+      },
+      {
+        "name": "ML Option",
+        "pick": 1,
+        "notes": "6.3900 OR (6.C01 + 7.C01). If choosing the latter, 6.3900 is not required.",
+        "courses": [
+          "6.3900",
+          "6.C01"
+        ]
+      },
+      {
+        "name": "Computational Biology",
+        "pick": 1,
+        "courses": [
+          "1.088",
+          "6.8701",
+          "7.093",
+          "7.32",
+          "7.33",
+          "18.413"
+        ]
+      },
+      {
+        "name": "Technical Communication",
+        "pick": 1,
+        "courses": [
+          "6.UAR",
+          "6.UAT",
+          "7.19"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "notes": "Two subjects from Biology Restricted Electives, AI+D Advanced Undergraduate Subjects, or Computational Biology lists",
+        "courses": [
+          "7.08",
+          "7.093",
+          "7.20",
+          "7.21",
+          "7.23",
+          "7.24",
+          "7.26",
+          "7.27",
+          "7.28",
+          "7.29",
+          "7.30",
+          "7.31",
+          "7.32",
+          "7.33",
+          "7.35",
+          "7.371",
+          "7.45",
+          "7.46",
+          "7.49",
+          "9.17",
+          "9.26",
+          "6.3730",
+          "6.4200",
+          "6.5151",
+          "6.5831",
+          "6.7411",
+          "6.8371",
+          "6.8701",
+          "6.8711",
+          "18.404",
+          "1.088",
+          "18.413"
+        ]
+      }
+    ],
+    "ci_m_courses": [
+      "7.002",
+      "7.003",
+      "20.109",
+      "6.UAR",
+      "6.UAT",
+      "7.19",
+      "6.4200"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.12",
+        "6.C06"
+      ],
+      "lab": [
+        "7.003",
+        "20.109"
+      ]
+    },
+    "notes": "5.07 is also acceptable in place of 7.05. 7.093/7.094 and 7.33 can count towards either Computational Biology or Biology restricted electives, but not both."
+  },
+  "6-9": {
+    "name": "Computation and Cognition",
+    "department": "6/9",
+    "total_units_beyond_girs": "180-198",
+    "required_courses": [
+      "6.100A",
+      "9.01",
+      "6.3900"
+    ],
+    "select_groups": [
+      {
+        "name": "Linear Algebra",
+        "pick": 1,
+        "courses": [
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "Discrete Math",
+        "pick": 1,
+        "courses": [
+          "6.1200",
+          "6.120A",
+          "18.03"
+        ]
+      },
+      {
+        "name": "Probability/Statistics",
+        "pick": 1,
+        "courses": [
+          "6.3700",
+          "18.05",
+          "18.600",
+          "6.3800",
+          "9.07"
+        ]
+      },
+      {
+        "name": "EECS Foundation",
+        "pick": 2,
+        "courses": [
+          "6.1010",
+          "6.1210",
+          "6.2000"
+        ]
+      },
+      {
+        "name": "EECS Breadth",
+        "pick": 1,
+        "courses": [
+          "6.3000",
+          "6.3100",
+          "6.3950",
+          "6.4110"
+        ]
+      },
+      {
+        "name": "Brain Systems/Neurophysiology",
+        "pick": 1,
+        "courses": [
+          "9.09",
+          "9.13",
+          "9.18",
+          "9.21",
+          "9.35",
+          "9.36",
+          "9.40",
+          "9.67"
+        ]
+      },
+      {
+        "name": "Computation and Cognition",
+        "pick": 1,
+        "courses": [
+          "9.19",
+          "9.39",
+          "9.49",
+          "9.53",
+          "9.66",
+          "9.85"
+        ]
+      },
+      {
+        "name": "Program Elective",
+        "pick": 1,
+        "courses": [
+          "6.4100",
+          "6.4200",
+          "6.8301",
+          "6.8611",
+          "9.09",
+          "9.13",
+          "9.18",
+          "9.19",
+          "9.21",
+          "9.24",
+          "9.26",
+          "9.35",
+          "9.36",
+          "9.40",
+          "9.42",
+          "9.49",
+          "9.53",
+          "9.66",
+          "9.85",
+          "6.3800",
+          "9.60",
+          "2.74",
+          "9.39",
+          "6.1040",
+          "16.84",
+          "6.C25",
+          "6.4210",
+          "6.1120"
+        ]
+      },
+      {
+        "name": "Laboratory",
+        "pick": 1,
+        "courses": [
+          "6.2040",
+          "6.2050",
+          "6.2060",
+          "6.2370",
+          "6.4200",
+          "6.4880",
+          "9.17",
+          "9.59",
+          "9.60"
+        ]
+      },
+      {
+        "name": "Advanced Project",
+        "pick": 1,
+        "courses": [
+          "6.UAR",
+          "9.41",
+          "9.58",
+          "6.4200",
+          "6.4210",
+          "6.8301",
+          "6.8611"
+        ]
+      }
+    ],
+    "ci_m_courses": [
+      "9.67",
+      "9.85",
+      "6.UAR",
+      "9.41",
+      "9.58",
+      "6.4200",
+      "6.4210",
+      "6.8301",
+      "6.8611",
+      "6.2040",
+      "6.2050",
+      "6.2060",
+      "6.2370",
+      "6.4880",
+      "9.17",
+      "9.59",
+      "9.60"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "9.01",
+        "6.1200",
+        "6.2000",
+        "6.3000",
+        "6.3700",
+        "18.03",
+        "18.05",
+        "18.06",
+        "18.600",
+        "18.C06"
+      ],
+      "hass": [
+        "9.85"
+      ],
+      "lab": [
+        "6.2040",
+        "6.2050",
+        "6.2060",
+        "6.2370",
+        "6.4200",
+        "6.4880",
+        "9.17",
+        "9.59",
+        "9.60"
+      ]
+    },
+    "notes": "Subjects from BCS Program Subjects list can count as either a BCS Program Subject or a Program Elective, but not both."
+  },
+  "6-14": {
+    "name": "Computer Science, Economics, and Data Science",
+    "department": "6/14",
+    "total_units_beyond_girs": "180-186",
+    "required_courses": [
+      "18.06",
+      "6.1200",
+      "6.1210",
+      "6.1220",
+      "14.01",
+      "14.32",
+      "6.3900"
+    ],
+    "select_groups": [
+      {
+        "name": "Introductory Programming",
+        "pick": 1,
+        "notes": "Select 12-18 units",
+        "courses": [
+          "6.1000",
+          "6.100A",
+          "6.1010"
+        ]
+      },
+      {
+        "name": "Probability/Statistics",
+        "pick": 1,
+        "courses": [
+          "14.30",
+          "18.600",
+          "6.3700"
+        ]
+      },
+      {
+        "name": "Project-based CI-M",
+        "pick": 1,
+        "courses": [
+          "6.UAR",
+          "6.UAT",
+          "15.276"
+        ]
+      },
+      {
+        "name": "Economics CI-M",
+        "pick": 1,
+        "courses": [
+          "14.05",
+          "14.18",
+          "14.33",
+          "14.35"
+        ]
+      },
+      {
+        "name": "CS Elective",
+        "pick": 1,
+        "courses": [
+          "6.3260",
+          "6.C571",
+          "15.053"
+        ]
+      },
+      {
+        "name": "Economics Electives",
+        "pick": 3,
+        "notes": "Must include at least one from Data Science group and one from Theory group",
+        "courses": [
+          "14.20",
+          "14.27",
+          "14.36",
+          "14.38",
+          "14.39",
+          "14.41",
+          "14.42",
+          "14.43",
+          "14.44",
+          "14.45",
+          "14.64",
+          "14.75",
+          "14.76",
+          "15.780",
+          "14.04",
+          "14.12",
+          "14.13",
+          "14.15",
+          "14.16",
+          "14.19",
+          "14.26",
+          "14.54"
+        ]
+      }
+    ],
+    "economics_elective_groups": {
+      "data_science": [
+        "14.20",
+        "14.27",
+        "14.36",
+        "14.38",
+        "14.39",
+        "14.41",
+        "14.42",
+        "14.43",
+        "14.44",
+        "14.45",
+        "14.64",
+        "14.75",
+        "14.76",
+        "15.780"
+      ],
+      "theory": [
+        "14.04",
+        "14.12",
+        "14.13",
+        "14.15",
+        "14.16",
+        "14.19",
+        "14.26",
+        "14.54"
+      ]
+    },
+    "ci_m_courses": [
+      "6.UAR",
+      "6.UAT",
+      "15.276",
+      "14.05",
+      "14.18",
+      "14.33",
+      "14.35"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "6.1200",
+        "18.06"
+      ],
+      "lab": [
+        "14.32"
+      ],
+      "hass": [
+        "6.3260",
+        "6.4590",
+        "14.01",
+        "14.02"
+      ]
+    },
+    "notes": "14.03 is also acceptable in place of 14.01. Economics electives must include at least one from the Data Science group and at least one from the Theory group."
+  },
+  "1-ENG": {
+    "name": "Engineering (Civil and Environmental)",
+    "department": "Civil and Environmental Engineering",
+    "degree": "SB in Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "1.000",
+      "1.010A",
+      "1.013",
+      "1.101",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Data Analysis Requirement",
+        "pick": 1,
+        "courses": [
+          "1.073",
+          "1.074"
+        ]
+      },
+      {
+        "name": "Core Track",
+        "pick_track": true,
+        "notes": "Select one complete track",
+        "tracks": {
+          "Environment": [
+            "1.018",
+            "1.060",
+            "1.061A",
+            "1.080",
+            "1.091",
+            "1.105",
+            "1.106",
+            "1.107"
+          ],
+          "Mechanics/Materials": [
+            "1.035",
+            "1.036",
+            "1.050",
+            "1.056",
+            "1.060",
+            "1.104"
+          ],
+          "Energy, Transportation, and Societal Systems": [
+            "1.020",
+            "1.022",
+            "1.041",
+            "1.050",
+            "1.104",
+            "15.053"
+          ]
+        }
+      }
+    ],
+    "restricted_electives": {
+      "pick": 4,
+      "notes": "At least 4 subjects forming a coherent program under CEE faculty supervision"
+    },
+    "ci_m_courses": [
+      "1.013",
+      "1.104",
+      "1.107"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "1.000",
+        "18.03"
+      ],
+      "lab": [
+        "1.101",
+        "1.104",
+        "1.106",
+        "1.107"
+      ]
+    },
+    "notes": "1.013 is expected to be taken twice (6 units each). 1.060 appears in multiple tracks."
+  },
+  "2": {
+    "name": "Mechanical Engineering",
+    "department": "Mechanical Engineering",
+    "degree": "SB in Mechanical Engineering",
+    "total_units_beyond_girs": "189-192",
+    "required_courses": [
+      "2.001",
+      "2.002",
+      "2.003",
+      "2.004",
+      "2.005",
+      "2.006",
+      "2.008",
+      "2.086",
+      "2.670",
+      "2.671",
+      "2.THU",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Design/Manufacturing I",
+        "pick": 1,
+        "courses": [
+          "2.007",
+          "2.017"
+        ]
+      },
+      {
+        "name": "Capstone CI-M",
+        "pick": 1,
+        "courses": [
+          "2.009",
+          "2.013",
+          "2.750",
+          "2.760"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "courses": [
+          "2.014",
+          "2.016",
+          "2.017",
+          "2.019",
+          "2.050",
+          "2.12",
+          "2.132",
+          "2.14",
+          "2.184",
+          "2.370",
+          "2.51",
+          "2.60",
+          "2.650",
+          "2.71",
+          "2.72",
+          "2.744",
+          "2.777",
+          "2.782",
+          "2.797",
+          "2.813",
+          "2.853",
+          "2.96",
+          "2.C01",
+          "2.C27"
+        ]
+      }
+    ],
+    "ci_m_courses": [
+      "2.671",
+      "2.009",
+      "2.013",
+      "2.019",
+      "2.750",
+      "2.760"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "2.001",
+        "18.03"
+      ],
+      "lab": [
+        "2.671"
+      ]
+    },
+    "notes": "2.670 is 3 units. 2.THU is 6 units minimum, up to 15 allowed. Department suggests taking a basic electronics subject early (e.g., 2.678, 6.2000, or 22.071)."
+  },
+  "2-A": {
+    "name": "Engineering (Mechanical Engineering)",
+    "department": "Mechanical Engineering",
+    "degree": "SB in Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "2.00",
+      "2.001",
+      "2.003",
+      "2.005",
+      "2.086",
+      "2.671",
+      "2.678",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Introduction to Design Lab",
+        "pick": 1,
+        "courses": [
+          "2.674",
+          "2.678"
+        ],
+        "notes": "2.678 may also satisfy this if not used as required"
+      },
+      {
+        "name": "Second-Level Core",
+        "pick": 3,
+        "courses": [
+          "2.002",
+          "2.004",
+          "2.006",
+          "2.007",
+          "2.008",
+          "2.016",
+          "2.017",
+          "2.051",
+          "2.060",
+          "2.065"
+        ],
+        "notes": "Select at least 3 second-level subjects"
+      },
+      {
+        "name": "Concentration",
+        "pick": 6,
+        "courses": [],
+        "notes": "6 subjects forming a coherent concentration designed with advisor. Not limited to Course 2 subjects. Must contain 150+ units of engineering content total."
+      }
+    ],
+    "ci_m_courses": [
+      "2.671",
+      "2.009",
+      "2.013",
+      "2.019",
+      "2.750",
+      "2.760"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "2.001",
+        "18.03"
+      ],
+      "lab": [
+        "2.671"
+      ]
+    },
+    "notes": "Flexible degree \u2014 student designs a concentration with advisor approval. Must contain at least 150 units of engineering content."
+  },
+  "2-OE": {
+    "name": "Mechanical and Ocean Engineering",
+    "department": "Mechanical Engineering",
+    "degree": "SB in Mechanical and Ocean Engineering",
+    "total_units_beyond_girs": 189,
+    "required_courses": [
+      "2.00A",
+      "2.001",
+      "2.002",
+      "2.003",
+      "2.004",
+      "2.005",
+      "2.016",
+      "2.017",
+      "2.065",
+      "2.086",
+      "2.612",
+      "2.671",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Capstone CI-M",
+        "pick": 1,
+        "courses": [
+          "2.013",
+          "2.019"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "courses": [
+          "2.006",
+          "2.008",
+          "2.013",
+          "2.014",
+          "2.019",
+          "2.12",
+          "2.14",
+          "2.700",
+          "2.96",
+          "2.THU"
+        ]
+      }
+    ],
+    "ci_m_courses": [
+      "2.671",
+      "2.017",
+      "2.013",
+      "2.019"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "2.001",
+        "18.03"
+      ],
+      "lab": [
+        "2.671"
+      ]
+    },
+    "notes": "Ocean engineering focus. 2.00A is 9 units (Designing for the Future: Earth, Sea, and Space)."
+  },
+  "3": {
+    "name": "Materials Science and Engineering",
+    "department": "Materials Science and Engineering",
+    "degree": "SB in Materials Science and Engineering",
+    "total_units_beyond_girs": "180-186",
+    "required_courses": [
+      "3.010",
+      "3.013",
+      "3.020",
+      "3.023",
+      "3.029",
+      "3.030",
+      "3.033",
+      "3.042",
+      "3.044"
+    ],
+    "select_groups": [
+      {
+        "name": "Intro Programming",
+        "pick": 1,
+        "courses": [
+          "6.100A",
+          "6.100L"
+        ]
+      },
+      {
+        "name": "Math Requirement",
+        "pick": 1,
+        "courses": [
+          "18.03",
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "Capstone",
+        "pick": 1,
+        "courses": [
+          "3.930",
+          "3.THU"
+        ],
+        "notes": "Internship (3.930+3.931) or thesis"
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 3,
+        "courses": [
+          "3.004",
+          "3.017",
+          "3.021",
+          "3.039",
+          "3.040",
+          "3.041",
+          "3.046",
+          "3.052",
+          "3.053",
+          "3.054",
+          "3.055",
+          "3.056",
+          "3.063",
+          "3.064",
+          "3.07",
+          "3.071",
+          "3.074",
+          "3.080",
+          "3.081",
+          "3.086",
+          "3.087",
+          "3.088",
+          "3.14",
+          "3.15",
+          "3.152",
+          "3.154",
+          "3.155",
+          "3.156",
+          "3.157",
+          "3.16",
+          "3.17",
+          "3.171",
+          "3.173",
+          "3.18",
+          "3.19"
+        ],
+        "notes": "33-36 units from restricted elective list"
+      }
+    ],
+    "ci_m_courses": [
+      "3.010",
+      "3.020",
+      "3.042",
+      "3.155"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "18.03",
+        "18.06",
+        "18.C06",
+        "3.020"
+      ],
+      "lab": [
+        "3.010"
+      ]
+    },
+    "notes": "3.010 and 3.020 are each 'partial CI-M' \u2014 together they count as one CI-M. 3.042 is a full CI-M."
+  },
+  "3-A": {
+    "name": "Materials Science and Engineering (Flexible)",
+    "department": "Materials Science and Engineering",
+    "degree": "SB as Recommended by DMSE",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "3.010",
+      "3.020",
+      "3.030",
+      "3.042"
+    ],
+    "select_groups": [
+      {
+        "name": "Intro Programming",
+        "pick": 1,
+        "courses": [
+          "6.100A",
+          "6.100L"
+        ]
+      },
+      {
+        "name": "Math Requirement",
+        "pick": 1,
+        "courses": [
+          "18.03",
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "Additional DMSE Core",
+        "pick": 2,
+        "courses": [
+          "3.013",
+          "3.023",
+          "3.029",
+          "3.033",
+          "3.044"
+        ],
+        "notes": "Select at least 2 additional core subjects"
+      },
+      {
+        "name": "Proposal of Study",
+        "pick": 6,
+        "courses": [],
+        "notes": "66 units from a proposal of study approved by the department, forming a coherent program"
+      }
+    ],
+    "ci_m_courses": [
+      "3.010",
+      "3.020",
+      "3.042",
+      "3.155"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "18.03",
+        "18.06",
+        "18.C06",
+        "3.020"
+      ],
+      "lab": [
+        "3.010"
+      ]
+    },
+    "notes": "Flexible degree \u2014 student submits a Course 3-A Program Proposal no later than beginning of junior year."
+  },
+  "4": {
+    "name": "Architecture",
+    "department": "Architecture",
+    "degree": "SB in Architecture",
+    "total_units_beyond_girs": "189-198",
+    "required_courses": [
+      "4.022",
+      "4.023",
+      "4.024",
+      "4.302",
+      "4.401",
+      "4.440",
+      "4.500",
+      "4.603",
+      "4.THT",
+      "4.THU"
+    ],
+    "select_groups": [
+      {
+        "name": "Intro Design Studio",
+        "pick": 1,
+        "courses": [
+          "4.021",
+          "4.02A"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "courses": [
+          "4.041",
+          "4.053",
+          "4.250",
+          "4.307",
+          "4.314",
+          "4.322",
+          "4.341",
+          "4.344",
+          "4.354",
+          "4.356",
+          "4.368",
+          "4.373",
+          "4.411",
+          "4.432",
+          "4.451",
+          "4.501",
+          "4.502",
+          "4.507",
+          "4.520",
+          "6.1040",
+          "6.4400",
+          "6.8371",
+          "CMS.405",
+          "CMS.631",
+          "CMS.633",
+          "4.601",
+          "4.602",
+          "4.605",
+          "4.614",
+          "4.635",
+          "4.636",
+          "4.651",
+          "4.657"
+        ],
+        "notes": "Minimum 24 units from restricted elective areas"
+      }
+    ],
+    "ci_m_courses": [
+      "4.302",
+      "4.THT"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "4.440"
+      ],
+      "lab": [
+        "4.411"
+      ],
+      "hass": [
+        "4.601",
+        "4.602",
+        "4.603",
+        "4.605",
+        "4.614",
+        "4.635",
+        "4.636",
+        "4.651",
+        "4.657"
+      ]
+    },
+    "notes": "Design-studio intensive. 4.023 and 4.024 are 24-unit studios."
+  },
+  "4-B": {
+    "name": "Art and Design",
+    "department": "Architecture",
+    "degree": "SB in Art and Design",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "4.031",
+      "4.032"
+    ],
+    "select_groups": [
+      {
+        "name": "Foundation Studio",
+        "pick": 3,
+        "courses": [
+          "4.021",
+          "4.022",
+          "4.301",
+          "4.302",
+          "4.322",
+          "4.341",
+          "4.354",
+          "4.500",
+          "4.501"
+        ],
+        "notes": "Three foundation subjects from art, design, and computation"
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 4,
+        "courses": [],
+        "notes": "48 units of restricted electives from approved list across art/design/computation/HTC"
+      }
+    ],
+    "ci_m_courses": [
+      "4.302",
+      "4.THT"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "hass": [
+        "4.301",
+        "4.302",
+        "4.601",
+        "4.602"
+      ]
+    },
+    "notes": "Cross-disciplinary art and design program."
+  },
+  "5": {
+    "name": "Chemistry",
+    "department": "Chemistry",
+    "degree": "SB in Chemistry",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "5.03",
+      "5.07",
+      "5.12",
+      "5.13",
+      "5.601",
+      "5.602",
+      "5.611",
+      "5.612",
+      "5.351",
+      "5.352",
+      "5.353",
+      "5.361"
+    ],
+    "select_groups": [
+      {
+        "name": "Advanced Chemistry Electives",
+        "pick": 2,
+        "courses": [
+          "5.04",
+          "5.08",
+          "5.43",
+          "5.62"
+        ]
+      },
+      {
+        "name": "Additional Lab Modules",
+        "pick": 3,
+        "courses": [
+          "5.362",
+          "5.363",
+          "5.371",
+          "5.372",
+          "5.373",
+          "5.381",
+          "5.382",
+          "5.383"
+        ]
+      },
+      {
+        "name": "Capstone",
+        "pick": 1,
+        "courses": [
+          "5.39"
+        ],
+        "notes": "Option 1: remaining URIECA modules. Option 2: 5.39 Research and Communication (requires prior UROP)."
+      }
+    ],
+    "ci_m_courses": [
+      "5.352",
+      "5.362",
+      "5.382",
+      "5.39"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.07",
+        "5.12",
+        "5.601",
+        "5.602",
+        "5.611",
+        "5.612"
+      ],
+      "lab": [
+        "5.351",
+        "5.352",
+        "5.353",
+        "5.363"
+      ]
+    },
+    "notes": "Has Standard and Flexible options. Standard requires 5.13, 5.602, 5.612. Flexible allows substituting elective focus subjects. Lab is modular (URIECA system)."
+  },
+  "5-7": {
+    "name": "Chemistry and Biology",
+    "department": "Chemistry / Biology (Interdisciplinary)",
+    "degree": "SB in Chemistry and Biology",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "5.03",
+      "5.08",
+      "5.12",
+      "5.13",
+      "5.601",
+      "5.611",
+      "7.03",
+      "7.06",
+      "5.351",
+      "5.352",
+      "5.353",
+      "7.002"
+    ],
+    "select_groups": [
+      {
+        "name": "Biological Chemistry",
+        "pick": 1,
+        "courses": [
+          "5.07",
+          "7.05"
+        ]
+      },
+      {
+        "name": "Lab Option",
+        "pick": 1,
+        "notes": "Option 1: 5.361 + 5.362. Option 2: 7.003.",
+        "courses": [
+          "5.361",
+          "5.362",
+          "7.003"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 3,
+        "courses": [
+          "5.04",
+          "5.363",
+          "5.371",
+          "5.372",
+          "5.373",
+          "5.381",
+          "5.382",
+          "5.383",
+          "5.39",
+          "5.43",
+          "5.602",
+          "5.612",
+          "5.62",
+          "7.093",
+          "7.094",
+          "7.19",
+          "7.20",
+          "7.21",
+          "7.23",
+          "7.24",
+          "7.26",
+          "7.27",
+          "7.28",
+          "7.29",
+          "7.30",
+          "7.31",
+          "7.32",
+          "7.33",
+          "7.35",
+          "7.371",
+          "7.45",
+          "7.46",
+          "7.49",
+          "9.17",
+          "9.26"
+        ],
+        "notes": "30 units from approved list"
+      }
+    ],
+    "ci_m_courses": [
+      "5.352",
+      "5.362",
+      "7.003",
+      "7.19"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.12",
+        "7.03"
+      ],
+      "lab": [
+        "7.003",
+        "5.351",
+        "5.352",
+        "5.353"
+      ]
+    },
+    "notes": "Interdisciplinary degree spanning Chemistry and Biology departments."
+  },
+  "7": {
+    "name": "Biology",
+    "department": "Biology",
+    "degree": "SB in Biology",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "7.03",
+      "7.05",
+      "7.06",
+      "5.12",
+      "5.07",
+      "7.002",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Intro Lab",
+        "pick": 1,
+        "courses": [
+          "7.003",
+          "7.002"
+        ],
+        "notes": "7.003 is the CI-M lab option"
+      },
+      {
+        "name": "Advanced Biology Electives",
+        "pick": 4,
+        "courses": [
+          "7.20",
+          "7.21",
+          "7.23",
+          "7.26",
+          "7.27",
+          "7.28",
+          "7.29",
+          "7.30",
+          "7.31",
+          "7.32",
+          "7.33",
+          "7.35",
+          "7.371",
+          "7.45",
+          "7.46",
+          "7.49"
+        ],
+        "notes": "48 units of advanced biology subjects"
+      },
+      {
+        "name": "Communication in Biology",
+        "pick": 1,
+        "courses": [
+          "7.19",
+          "7.003"
+        ],
+        "notes": "At least one CI-M subject"
+      }
+    ],
+    "ci_m_courses": [
+      "7.003",
+      "7.19"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.12",
+        "7.03"
+      ],
+      "lab": [
+        "7.003"
+      ]
+    },
+    "notes": "Requires strong chemistry foundation. 7.002 is 6 units. Need to verify exact elective count from degree chart."
+  },
+  "8": {
+    "name": "Physics",
+    "department": "Physics",
+    "degree": "SB in Physics",
+    "total_units_beyond_girs": 186,
+    "required_courses": [
+      "18.03",
+      "8.03",
+      "8.033",
+      "8.04",
+      "8.044",
+      "8.05",
+      "8.06",
+      "8.13",
+      "8.14",
+      "8.223",
+      "8.THU"
+    ],
+    "select_groups": [
+      {
+        "name": "Math Beyond 18.03",
+        "pick": 1,
+        "courses": [],
+        "notes": "One subject in the Department of Mathematics beyond 18.03"
+      },
+      {
+        "name": "Advanced Physics Electives",
+        "pick": 2,
+        "courses": [
+          "8.07",
+          "8.08",
+          "8.09"
+        ],
+        "notes": "Two additional physics subjects, at least one from 8.07/8.08/8.09"
+      }
+    ],
+    "ci_m_courses": [
+      "8.06",
+      "8.13",
+      "8.14",
+      "8.226",
+      "12.410",
+      "STS.042"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "8.03",
+        "8.04",
+        "18.03"
+      ],
+      "lab": [
+        "8.13"
+      ]
+    },
+    "notes": "Has Focused and Flexible options. Focused is for students pursuing physics as a career. 8.THU is a 12-unit thesis. 8.13 is 18 units, 8.14 is 18 units."
+  },
+  "9": {
+    "name": "Brain and Cognitive Sciences",
+    "department": "Brain and Cognitive Sciences",
+    "degree": "SB in Brain and Cognitive Sciences",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "9.01",
+      "9.40"
+    ],
+    "select_groups": [
+      {
+        "name": "Math Requirement",
+        "pick": 1,
+        "courses": [
+          "18.03",
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "Statistics",
+        "pick": 1,
+        "courses": [
+          "9.07",
+          "18.05",
+          "6.3700"
+        ]
+      },
+      {
+        "name": "Computation",
+        "pick": 1,
+        "courses": [
+          "6.100A",
+          "6.100L",
+          "9.60"
+        ]
+      },
+      {
+        "name": "Core Areas",
+        "pick": 4,
+        "courses": [],
+        "notes": "One subject from each of 4 areas: molecular/cellular neuroscience, systems neuroscience, cognitive science, and computational neuroscience"
+      },
+      {
+        "name": "Laboratory",
+        "pick": 1,
+        "courses": [
+          "9.12",
+          "9.17",
+          "9.59",
+          "9.63"
+        ],
+        "notes": "At least one laboratory subject"
+      },
+      {
+        "name": "Electives",
+        "pick": 2,
+        "courses": [],
+        "notes": "Additional Course 9 electives to reach required units"
+      }
+    ],
+    "ci_m_courses": [
+      "9.12",
+      "9.17",
+      "9.59",
+      "9.63"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "18.03",
+        "18.06",
+        "18.C06"
+      ]
+    },
+    "notes": "Need to verify exact structure from degree chart PDF. Course 9 is distinct from 6-9 (Computation and Cognition)."
+  },
+  "10": {
+    "name": "Chemical Engineering",
+    "department": "Chemical Engineering",
+    "degree": "SB in Chemical Engineering",
+    "total_units_beyond_girs": "186-195",
+    "required_courses": [
+      "5.12",
+      "5.310",
+      "5.601",
+      "10.10",
+      "18.03",
+      "10.213",
+      "10.301",
+      "10.302",
+      "10.32",
+      "10.37",
+      "10.490"
+    ],
+    "select_groups": [
+      {
+        "name": "Chemistry/Biology Intermediate",
+        "pick": 1,
+        "courses": [
+          "5.03",
+          "5.07",
+          "5.13",
+          "5.611",
+          "7.05"
+        ]
+      },
+      {
+        "name": "Projects Laboratory (CI-M)",
+        "pick": 1,
+        "courses": [
+          "10.26",
+          "10.27",
+          "10.28",
+          "10.29",
+          "10.467"
+        ]
+      },
+      {
+        "name": "Integrated ChemE Topics",
+        "pick": 1,
+        "courses": [
+          "10.492A",
+          "10.492B",
+          "10.493",
+          "10.494A",
+          "10.494B"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 3,
+        "courses": [],
+        "notes": "21-30 units: one ChemE subject \u22656 units, one ChemE subject \u22659 units, one engineering lab \u22656 units"
+      }
+    ],
+    "ci_m_courses": [
+      "5.310",
+      "10.26",
+      "10.27",
+      "10.28",
+      "10.29",
+      "10.467"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.12",
+        "5.07",
+        "7.05",
+        "5.611",
+        "10.301",
+        "18.03"
+      ],
+      "lab": [
+        "5.310"
+      ]
+    },
+    "notes": "ABET accredited. Students encouraged to take 5.111/5.112, 5.12, 7.01x in first year."
+  },
+  "10-B": {
+    "name": "Chemical-Biological Engineering",
+    "department": "Chemical Engineering",
+    "degree": "SB in Chemical-Biological Engineering",
+    "total_units_beyond_girs": "186-195",
+    "required_courses": [
+      "5.12",
+      "5.310",
+      "5.601",
+      "7.05",
+      "10.10",
+      "18.03",
+      "10.213",
+      "10.301",
+      "10.302",
+      "10.32",
+      "10.37",
+      "10.490",
+      "7.03",
+      "7.06"
+    ],
+    "select_groups": [
+      {
+        "name": "Projects Laboratory (CI-M)",
+        "pick": 1,
+        "courses": [
+          "10.28",
+          "10.29"
+        ]
+      },
+      {
+        "name": "Integrated ChemE Topics",
+        "pick": 1,
+        "courses": [
+          "10.492A",
+          "10.492B",
+          "10.493",
+          "10.494A",
+          "10.494B"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "courses": [],
+        "notes": "Biology/bioengineering restricted electives"
+      }
+    ],
+    "ci_m_courses": [
+      "5.310",
+      "10.28",
+      "10.29"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.12",
+        "7.05",
+        "7.03",
+        "18.03"
+      ],
+      "lab": [
+        "5.310"
+      ]
+    },
+    "notes": "ABET accredited. Biological focus variant of Course 10."
+  },
+  "10-ENG": {
+    "name": "Engineering (Chemical Engineering)",
+    "department": "Chemical Engineering",
+    "degree": "SB in Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "5.601",
+      "10.10",
+      "10.213",
+      "10.301",
+      "10.302",
+      "10.37",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Foundational Concepts",
+        "pick": 3,
+        "courses": [],
+        "notes": "One from each of 3 foundational areas, selected with advisor"
+      },
+      {
+        "name": "Flexible Engineering Concentration",
+        "pick": 4,
+        "courses": [],
+        "notes": "4 subjects from a suggested list for the chosen concentration, or student-proposed"
+      },
+      {
+        "name": "Capstone",
+        "pick": 1,
+        "courses": [],
+        "notes": "12 units: senior-level project or senior thesis"
+      }
+    ],
+    "ci_m_courses": [
+      "5.310",
+      "10.26",
+      "10.27",
+      "10.28",
+      "10.29",
+      "10.467"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "10.301",
+        "18.03"
+      ]
+    },
+    "notes": "Flexible engineering degree. Student proposes concentration approved by ChemE Undergraduate Committee."
+  },
+  "10-C": {
+    "name": "Chemical Engineering (Flexible)",
+    "department": "Chemical Engineering",
+    "degree": "SB as Recommended by ChemE",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "5.601",
+      "10.10",
+      "10.213",
+      "10.301",
+      "10.302",
+      "10.37",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Chemistry/Biology",
+        "pick": 1,
+        "courses": [
+          "5.03",
+          "5.07",
+          "5.12",
+          "5.13",
+          "5.611",
+          "7.05"
+        ]
+      },
+      {
+        "name": "Focus Area",
+        "pick": 5,
+        "courses": [],
+        "notes": "Coherent program of study approved by department"
+      }
+    ],
+    "ci_m_courses": [
+      "5.310",
+      "10.26",
+      "10.27",
+      "10.28",
+      "10.29",
+      "10.467"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "10.301",
+        "18.03"
+      ]
+    },
+    "notes": "Non-accredited flexible degree. Fewer core ChemE subjects than Course 10."
+  },
+  "_meta": {
+    "description": "MIT undergraduate major requirements for chatbot advisor",
+    "last_updated": "2026-03-09",
+    "source": "catalog.mit.edu degree charts (2025-2026)",
+    "total_majors": 55,
+    "completed_with_full_data": [
+      "1-ENG",
+      "2",
+      "2-A",
+      "2-OE",
+      "3",
+      "3-A",
+      "4",
+      "4-B",
+      "5",
+      "5-7",
+      "6-3",
+      "6-4",
+      "6-7",
+      "6-9",
+      "6-14",
+      "7",
+      "8",
+      "9",
+      "10",
+      "10-B",
+      "10-C",
+      "10-ENG",
+      "11",
+      "11-6"
+    ],
+    "partial_data_needs_verification": [
+      "3-C",
+      "6-5",
+      "12",
+      "1-12",
+      "14-1",
+      "14-2",
+      "15-1",
+      "15-2",
+      "15-3",
+      "16",
+      "16-ENG",
+      "17",
+      "18",
+      "18-C",
+      "20",
+      "22",
+      "22-ENG"
+    ],
+    "stub_only_needs_degree_chart": [
+      "21",
+      "21A",
+      "21E",
+      "21G",
+      "21H",
+      "21L",
+      "21M",
+      "21S",
+      "21T",
+      "21W",
+      "24-1",
+      "24-2",
+      "CMS",
+      "STS"
+    ]
+  },
+  "11": {
+    "name": "Planning",
+    "department": "Urban Studies and Planning",
+    "degree": "SB in Planning",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "11.001",
+      "11.002",
+      "14.01",
+      "11.188",
+      "11.THT",
+      "11.THU"
+    ],
+    "select_groups": [
+      {
+        "name": "Planned Electives",
+        "pick": 7,
+        "courses": [],
+        "notes": "78-81 units of Planning electives in consultation with advisor from Course 11 subjects"
+      }
+    ],
+    "ci_m_courses": [
+      "11.188",
+      "11.027",
+      "11.THT"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "hass": [
+        "11.001",
+        "11.002",
+        "14.01"
+      ],
+      "lab": [
+        "11.188"
+      ]
+    },
+    "notes": "4 HASS subjects can be satisfied by departmental program. 11.027 City to City is optional urban field experience."
+  },
+  "11-6": {
+    "name": "Urban Science and Planning with Computer Science",
+    "department": "Urban Studies and Planning / EECS",
+    "degree": "SB in Urban Science and Planning with CS",
+    "total_units_beyond_girs": "180-195",
+    "required_courses": [
+      "6.100A",
+      "6.100B",
+      "6.1010",
+      "6.1200",
+      "6.1210",
+      "11.001",
+      "11.188"
+    ],
+    "select_groups": [
+      {
+        "name": "Inference/ML Option",
+        "pick": 1,
+        "courses": [
+          "6.3800",
+          "18.06",
+          "6.3900"
+        ],
+        "notes": "Option 1: 6.3800 (12u). Option 2: 18.06/18.C06 + 6.3900 (24u)"
+      },
+      {
+        "name": "Policy/Ethics",
+        "pick": 1,
+        "courses": [
+          "6.4590",
+          "11.002",
+          "11.011",
+          "11.165"
+        ]
+      },
+      {
+        "name": "Urban Technology Workshop",
+        "pick": 1,
+        "courses": [
+          "11.007",
+          "11.138",
+          "11.154",
+          "11.C35"
+        ]
+      },
+      {
+        "name": "Senior Thesis/Project",
+        "pick": 1,
+        "courses": [
+          "6.UAR",
+          "11.UAR",
+          "11.THT"
+        ],
+        "notes": "Option 1: UROP + 6.UAR/11.UAR. Option 2: 11.THT + 11.THU"
+      },
+      {
+        "name": "CS Electives",
+        "pick": 3,
+        "courses": [
+          "6.1020",
+          "6.1040",
+          "6.1060",
+          "6.1100",
+          "6.1220",
+          "6.1600",
+          "6.1800",
+          "6.1820",
+          "6.1850",
+          "6.1910",
+          "6.3260",
+          "6.3720",
+          "6.3730",
+          "6.4130",
+          "6.4210",
+          "6.4400",
+          "6.4510",
+          "6.5081",
+          "6.5151",
+          "6.5831",
+          "6.5931",
+          "6.8301",
+          "6.8371",
+          "6.8611"
+        ],
+        "notes": "Minimum 27 units of CS electives"
+      },
+      {
+        "name": "Urban Science Electives",
+        "pick": 3,
+        "courses": [
+          "11.007",
+          "11.008",
+          "11.024",
+          "11.029",
+          "11.074",
+          "11.100",
+          "11.111",
+          "11.113",
+          "11.123",
+          "11.137",
+          "11.138",
+          "11.148",
+          "11.149",
+          "11.C35",
+          "11.154",
+          "11.155",
+          "11.156",
+          "11.158",
+          "11.165",
+          "11.169",
+          "6.4590",
+          "12.010",
+          "15.276"
+        ],
+        "notes": "Minimum 30 units of Urban Science electives"
+      }
+    ],
+    "ci_m_courses": [
+      "11.188",
+      "6.UAR",
+      "11.UAR",
+      "11.THT"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "6.100A",
+        "6.100B",
+        "6.1200"
+      ],
+      "lab": [
+        "6.1010",
+        "6.3800",
+        "11.188"
+      ],
+      "hass": [
+        "11.001"
+      ]
+    },
+    "notes": "Joint DUSP/EECS degree. 6.4590 and 11.165 can count toward Urban Planning OR Urban Science Electives, not both."
+  },
+  "12": {
+    "name": "Earth, Atmospheric, and Planetary Sciences",
+    "department": "Earth, Atmospheric, and Planetary Sciences",
+    "degree": "SB in EAPS",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "12.001",
+      "12.002",
+      "12.003",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Programming",
+        "pick": 1,
+        "courses": [
+          "6.100A",
+          "12.010"
+        ]
+      },
+      {
+        "name": "Advanced EAPS",
+        "pick": 5,
+        "courses": [],
+        "notes": "Electives in EAPS forming a coherent program, with advisor approval"
+      },
+      {
+        "name": "Thesis/Capstone",
+        "pick": 1,
+        "courses": [
+          "12.THU"
+        ],
+        "notes": "Senior thesis or equivalent"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "18.03",
+        "12.001"
+      ]
+    },
+    "notes": "Small department. Need to verify exact elective structure from degree chart PDF."
+  },
+  "1-12": {
+    "name": "Climate System Science and Engineering",
+    "department": "Civil and Environmental Engineering / EAPS",
+    "degree": "SB in Climate System Science and Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "Joint CEE/EAPS program. Need degree chart data to complete."
+  },
+  "14-1": {
+    "name": "Economics",
+    "department": "Economics",
+    "degree": "SB in Economics",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "14.01",
+      "14.02",
+      "14.30",
+      "14.32",
+      "14.33"
+    ],
+    "select_groups": [
+      {
+        "name": "Math",
+        "pick": 1,
+        "courses": [
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "Economic Theory",
+        "pick": 2,
+        "courses": [
+          "14.03",
+          "14.04",
+          "14.05",
+          "14.06"
+        ],
+        "notes": "At least 2 intermediate theory courses"
+      },
+      {
+        "name": "Economics Electives",
+        "pick": 3,
+        "courses": [],
+        "notes": "3 additional economics subjects at 14.1x level or above"
+      }
+    ],
+    "ci_m_courses": [
+      "14.33"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "hass": [
+        "14.01",
+        "14.02"
+      ]
+    },
+    "notes": "Need to verify exact elective list from degree chart. 14.01 and 14.02 count as HASS."
+  },
+  "14-2": {
+    "name": "Mathematical Economics",
+    "department": "Economics",
+    "degree": "SB in Mathematical Economics",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "14.01",
+      "14.02",
+      "14.04",
+      "14.06",
+      "14.30",
+      "14.32",
+      "14.33",
+      "18.06"
+    ],
+    "select_groups": [
+      {
+        "name": "Advanced Math",
+        "pick": 2,
+        "courses": [
+          "18.100A",
+          "18.100B",
+          "18.100Q",
+          "18.200",
+          "18.300"
+        ],
+        "notes": "At least 2 math subjects beyond 18.06"
+      },
+      {
+        "name": "Economics Electives",
+        "pick": 2,
+        "courses": [],
+        "notes": "Additional economics electives"
+      }
+    ],
+    "ci_m_courses": [
+      "14.33"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "hass": [
+        "14.01",
+        "14.02"
+      ]
+    },
+    "notes": "More math-intensive than 14-1. Requires real analysis and additional math."
+  },
+  "15-1": {
+    "name": "Management",
+    "department": "Sloan School of Management",
+    "degree": "SB in Management",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "14.01",
+      "14.02",
+      "15.501",
+      "15.516"
+    ],
+    "select_groups": [
+      {
+        "name": "Statistics",
+        "pick": 1,
+        "courses": [
+          "14.30",
+          "15.075",
+          "18.05"
+        ]
+      },
+      {
+        "name": "Management Core",
+        "pick": 4,
+        "courses": [],
+        "notes": "Core subjects across marketing, finance, operations, strategy"
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 4,
+        "courses": [],
+        "notes": "Electives from Sloan offerings"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "hass": [
+        "14.01",
+        "14.02"
+      ]
+    },
+    "notes": "Need degree chart to complete. Sloan management degree."
+  },
+  "15-2": {
+    "name": "Business Analytics",
+    "department": "Sloan School of Management",
+    "degree": "SB in Business Analytics",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "Need degree chart data to complete."
+  },
+  "15-3": {
+    "name": "Finance",
+    "department": "Sloan School of Management",
+    "degree": "SB in Finance",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "Need degree chart data to complete."
+  },
+  "16": {
+    "name": "Aerospace Engineering",
+    "department": "Aeronautics and Astronautics",
+    "degree": "SB in Aerospace Engineering",
+    "total_units_beyond_girs": "186-198",
+    "required_courses": [
+      "16.001",
+      "16.002",
+      "16.003",
+      "16.004",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Professional Area Subjects",
+        "pick": 4,
+        "courses": [],
+        "notes": "Subjects from 4 professional areas: structures/materials, aero/fluid mechanics, dynamics/controls, propulsion/energy"
+      },
+      {
+        "name": "Capstone",
+        "pick": 1,
+        "courses": [
+          "16.810",
+          "16.821",
+          "16.831"
+        ],
+        "notes": "Capstone design/project"
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "courses": [],
+        "notes": "AeroAstro restricted electives"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "16.001",
+        "18.03"
+      ]
+    },
+    "notes": "ABET accredited. Need to verify exact structure from PDF."
+  },
+  "16-ENG": {
+    "name": "Engineering (Aeronautics and Astronautics)",
+    "department": "Aeronautics and Astronautics",
+    "degree": "SB in Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "16.001",
+      "16.002",
+      "16.003",
+      "16.004",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Concentration",
+        "pick": 5,
+        "courses": [],
+        "notes": "Flexible concentration approved by department"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "16.001",
+        "18.03"
+      ]
+    },
+    "notes": "Flexible variant of Course 16."
+  },
+  "17": {
+    "name": "Political Science",
+    "department": "Political Science",
+    "degree": "SB in Political Science",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Core + Electives",
+        "pick": 8,
+        "courses": [],
+        "notes": "Core political science subjects plus electives across subfields"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Need degree chart data to complete."
+  },
+  "18": {
+    "name": "Mathematics",
+    "department": "Mathematics",
+    "degree": "SB in Mathematics",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "18.100A",
+      "18.06",
+      "18.901"
+    ],
+    "select_groups": [
+      {
+        "name": "Algebra",
+        "pick": 1,
+        "courses": [
+          "18.701",
+          "18.703"
+        ]
+      },
+      {
+        "name": "Analysis",
+        "pick": 1,
+        "courses": [
+          "18.100B",
+          "18.100Q",
+          "18.101",
+          "18.102"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 5,
+        "courses": [],
+        "notes": "Additional math subjects, at least 2 at advanced level"
+      }
+    ],
+    "ci_m_courses": [
+      "18.104",
+      "18.200",
+      "18.204",
+      "18.384",
+      "18.424",
+      "18.434"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "18.06"
+      ]
+    },
+    "notes": "Need to verify exact structure from degree chart. 18.100A or 18.100B is intro analysis."
+  },
+  "18-C": {
+    "name": "Mathematics with Computer Science",
+    "department": "Mathematics / EECS",
+    "degree": "SB in Mathematics with CS",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "18.06",
+      "18.062",
+      "6.100A",
+      "6.1010",
+      "6.1210"
+    ],
+    "select_groups": [
+      {
+        "name": "Analysis",
+        "pick": 1,
+        "courses": [
+          "18.100A",
+          "18.100B",
+          "18.100Q"
+        ]
+      },
+      {
+        "name": "Algebra",
+        "pick": 1,
+        "courses": [
+          "18.701",
+          "18.703"
+        ]
+      },
+      {
+        "name": "Math Electives",
+        "pick": 3,
+        "courses": [],
+        "notes": "Additional math subjects"
+      },
+      {
+        "name": "CS Elective",
+        "pick": 1,
+        "courses": [],
+        "notes": "Additional CS subject beyond requirements"
+      }
+    ],
+    "ci_m_courses": [
+      "18.104",
+      "18.204"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "18.06",
+        "6.100A"
+      ]
+    },
+    "notes": "Joint Math/CS degree. Need to verify exact structure from degree chart."
+  },
+  "20": {
+    "name": "Biological Engineering",
+    "department": "Biological Engineering",
+    "degree": "SB in Biological Engineering",
+    "total_units_beyond_girs": "186-198",
+    "required_courses": [
+      "5.12",
+      "7.05",
+      "7.06",
+      "18.03",
+      "20.110",
+      "20.111",
+      "20.310",
+      "20.320",
+      "20.330",
+      "20.340",
+      "20.380"
+    ],
+    "select_groups": [
+      {
+        "name": "Biology Foundation",
+        "pick": 1,
+        "courses": [
+          "7.03",
+          "7.28",
+          "7.21"
+        ]
+      },
+      {
+        "name": "Organic Chemistry",
+        "pick": 1,
+        "courses": [
+          "5.13",
+          "5.07"
+        ]
+      },
+      {
+        "name": "Capstone",
+        "pick": 1,
+        "courses": [
+          "20.345",
+          "20.THU"
+        ]
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 2,
+        "courses": [],
+        "notes": "BioE restricted electives"
+      }
+    ],
+    "ci_m_courses": [
+      "20.340",
+      "20.345"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "5.12",
+        "7.05",
+        "18.03"
+      ]
+    },
+    "notes": "ABET accredited. Need to verify exact elective list."
+  },
+  "22": {
+    "name": "Nuclear Science and Engineering",
+    "department": "Nuclear Science and Engineering",
+    "degree": "SB in Nuclear Science and Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "22.01",
+      "22.02",
+      "22.071",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Advanced NSE",
+        "pick": 3,
+        "courses": [
+          "22.05",
+          "22.06",
+          "22.09"
+        ],
+        "notes": "Core advanced nuclear subjects"
+      },
+      {
+        "name": "Restricted Electives",
+        "pick": 3,
+        "courses": [],
+        "notes": "NSE restricted electives"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "22.01",
+        "18.03"
+      ]
+    },
+    "notes": "Need to verify from degree chart."
+  },
+  "22-ENG": {
+    "name": "Engineering (Nuclear Science and Engineering)",
+    "department": "Nuclear Science and Engineering",
+    "degree": "SB in Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "22.01",
+      "22.02",
+      "22.071",
+      "18.03"
+    ],
+    "select_groups": [
+      {
+        "name": "Concentration",
+        "pick": 5,
+        "courses": [],
+        "notes": "Flexible concentration approved by department"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "22.01",
+        "18.03"
+      ]
+    },
+    "notes": "Flexible engineering variant of Course 22."
+  },
+  "6-5": {
+    "name": "Electrical Engineering with Computing",
+    "department": "Electrical Engineering and Computer Science",
+    "degree": "SB in EE with Computing",
+    "total_units_beyond_girs": 198,
+    "required_courses": [
+      "6.100A",
+      "6.1010",
+      "6.1200",
+      "6.1210",
+      "6.2000",
+      "6.2500"
+    ],
+    "select_groups": [
+      {
+        "name": "Programming Intro",
+        "pick": 1,
+        "courses": [
+          "6.100B",
+          "16.C20"
+        ]
+      },
+      {
+        "name": "Math",
+        "pick": 1,
+        "courses": [
+          "18.06",
+          "18.C06"
+        ]
+      },
+      {
+        "name": "EE Foundation",
+        "pick": 2,
+        "courses": [
+          "6.2100",
+          "6.2300",
+          "6.2540",
+          "6.3000"
+        ],
+        "notes": "EE foundation subjects"
+      },
+      {
+        "name": "EE Advanced",
+        "pick": 2,
+        "courses": [],
+        "notes": "Advanced EE electives"
+      },
+      {
+        "name": "CS Advanced",
+        "pick": 2,
+        "courses": [],
+        "notes": "Advanced CS electives"
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "6.100A",
+        "6.100B"
+      ]
+    },
+    "notes": "EE-focused EECS degree with computing. Need to verify exact structure."
+  },
+  "3-C": {
+    "name": "Archaeology and Materials",
+    "department": "Materials Science and Engineering",
+    "degree": "SB in Archaeology and Materials",
+    "total_units_beyond_girs": 180,
+    "required_courses": [
+      "3.010",
+      "3.020",
+      "3.030"
+    ],
+    "select_groups": [
+      {
+        "name": "Archaeology/Materials Electives",
+        "pick": 6,
+        "courses": [],
+        "notes": "Interdisciplinary program combining materials science and archaeology"
+      }
+    ],
+    "ci_m_courses": [
+      "3.042"
+    ],
+    "ci_m_required": 2,
+    "gir_double_counts": {
+      "rest": [
+        "3.020"
+      ]
+    },
+    "notes": "Interdisciplinary DMSE program. Need degree chart to complete."
+  },
+  "21": {
+    "name": "Humanities",
+    "department": "Humanities",
+    "degree": "SB in Humanities",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Humanities department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21A": {
+    "name": "Anthropology",
+    "department": "Anthropology",
+    "degree": "SB in Anthropology",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Anthropology department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21E": {
+    "name": "Humanities and Engineering",
+    "department": "Humanities",
+    "degree": "SB in Humanities and Engineering",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Humanities department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21G": {
+    "name": "Global Studies and Languages",
+    "department": "Global Languages",
+    "degree": "SB in Global Studies and Languages",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Global Languages department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21H": {
+    "name": "History",
+    "department": "History",
+    "degree": "SB in History",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult History department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21L": {
+    "name": "Literature",
+    "department": "Literature",
+    "degree": "SB in Literature",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Literature department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21M": {
+    "name": "Music",
+    "department": "Music and Theater Arts",
+    "degree": "SB in Music",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Music and Theater Arts department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21S": {
+    "name": "Humanities and Science",
+    "department": "Humanities",
+    "degree": "SB in Humanities and Science",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Humanities department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21T": {
+    "name": "Theater Arts",
+    "department": "Music and Theater Arts",
+    "degree": "SB in Theater Arts",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Music and Theater Arts department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "21W": {
+    "name": "Writing",
+    "department": "Comparative Media Studies/Writing",
+    "degree": "SB in Writing",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Comparative Media Studies/Writing department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "CMS": {
+    "name": "Comparative Media Studies",
+    "department": "Comparative Media Studies/Writing",
+    "degree": "SB in Comparative Media Studies",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Comparative Media Studies/Writing department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "STS": {
+    "name": "Science, Technology, and Society",
+    "department": "Science, Technology, and Society",
+    "degree": "SB in Science, Technology, and Society",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Science, Technology, and Society department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "24-1": {
+    "name": "Philosophy",
+    "department": "Linguistics and Philosophy",
+    "degree": "SB in Philosophy",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Linguistics and Philosophy department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  },
+  "24-2": {
+    "name": "Linguistics and Philosophy",
+    "department": "Linguistics and Philosophy",
+    "degree": "SB in Linguistics and Philosophy",
+    "total_units_beyond_girs": 180,
+    "required_courses": [],
+    "select_groups": [
+      {
+        "name": "Departmental Requirements",
+        "pick": 8,
+        "courses": [],
+        "notes": "Consult Linguistics and Philosophy department for specific requirements. Mostly HASS subjects."
+      }
+    ],
+    "ci_m_courses": [],
+    "ci_m_required": 2,
+    "gir_double_counts": {},
+    "notes": "HASS major. Many subjects count toward HASS requirement. Need degree chart data to complete specific course lists."
+  }
+}

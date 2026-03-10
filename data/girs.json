@@ -1,0 +1,126 @@
+{
+  "_comment": "MIT General Institute Requirements (GIRs). These are the same for every undergraduate regardless of major. Source: catalog.mit.edu/mit/undergraduate-education/general-institute-requirements/",
+
+  "science_core": {
+    "_comment": "6 subjects total: Calculus I, Calculus II, Physics I, Physics II, Chemistry, Biology",
+    "calculus_i": {
+      "category": "Calculus I",
+      "courses_required": 1,
+      "satisfied_by": ["18.01", "18.01A", "18.014"],
+      "description": "Single-variable calculus. Can be fulfilled by AP BC score of 5."
+    },
+    "calculus_ii": {
+      "category": "Calculus II",
+      "courses_required": 1,
+      "satisfied_by": ["18.02", "18.02A", "18.022", "18.024"],
+      "description": "Multivariable calculus."
+    },
+    "physics_i": {
+      "category": "Physics I",
+      "courses_required": 1,
+      "satisfied_by": ["8.01", "8.011", "8.012", "8.01L", "ES.801", "ES.8012"],
+      "description": "Classical mechanics. Can be fulfilled by AP Physics C Mechanics score of 5."
+    },
+    "physics_ii": {
+      "category": "Physics II",
+      "courses_required": 1,
+      "satisfied_by": ["8.02", "8.021", "8.022", "ES.802", "ES.8022"],
+      "description": "Electricity and magnetism. Requires Physics I as prerequisite."
+    },
+    "chemistry": {
+      "category": "Chemistry",
+      "courses_required": 1,
+      "satisfied_by": ["3.091", "5.111", "5.112", "ES.5111", "ES.5112"],
+      "description": "Introductory chemistry. 3.091 emphasizes solid-state; 5.111/5.112 emphasize general principles."
+    },
+    "biology": {
+      "category": "Biology",
+      "courses_required": 1,
+      "satisfied_by": ["7.012", "7.013", "7.014", "7.015", "7.016", "ES.7012", "ES.7013"],
+      "description": "Introductory biology. Multiple versions cover same core material with different themes."
+    }
+  },
+
+  "rest": {
+    "_comment": "Restricted Electives in Science and Technology — 2 required. One may be in major dept, other must be outside. Subjects are flagged 'REST' in the catalog.",
+    "category": "REST",
+    "courses_required": 2,
+    "description": "Two REST subjects required. At most one may be in your major department. REST subjects are flagged in the course catalog. Common examples: 6.1200, 6.1910, 6.3000, 6.3700, 6.2000, 8.03, 18.03, etc.",
+    "rule_notes": "One REST may be in the student's major department; the other must be from a different department."
+  },
+
+  "lab": {
+    "_comment": "Institute Laboratory Requirement — 1 subject (12 units) or 2 subjects (6 units each). Flagged 'Institute Lab' in catalog.",
+    "category": "Institute Lab",
+    "courses_required": 1,
+    "description": "One 12-unit Institute Lab subject, or two 6-unit Partial Lab subjects. Subjects are flagged in the catalog. Common examples: 6.1010, 6.2040, 6.2050, 6.2060, 6.3800.",
+    "rule_notes": "Can be fulfilled by one 12-unit lab or two 6-unit partial labs."
+  },
+
+  "hass": {
+    "_comment": "Humanities, Arts, and Social Sciences — 8 subjects total with distribution and concentration requirements.",
+    "total_subjects_required": 8,
+    "distribution": {
+      "description": "Must include at least one subject from each of three categories: HASS-A (Arts), HASS-H (Humanities), HASS-S (Social Sciences).",
+      "hass_a": {
+        "category": "HASS-A",
+        "courses_required": 1,
+        "description": "At least one HASS subject in the Arts."
+      },
+      "hass_h": {
+        "category": "HASS-H",
+        "courses_required": 1,
+        "description": "At least one HASS subject in the Humanities."
+      },
+      "hass_s": {
+        "category": "HASS-S",
+        "courses_required": 1,
+        "description": "At least one HASS subject in the Social Sciences."
+      }
+    },
+    "concentration": {
+      "description": "3-4 subjects forming a coherent group in one area of HASS. At least 2 must be from the same department. The concentration must be approved.",
+      "courses_required": 3,
+      "rule_notes": "At least 2 of the concentration subjects must be from the same department. One subject in the concentration may be taken on a P/D/F basis."
+    },
+    "electives": {
+      "description": "Remaining HASS subjects (after distribution and concentration) are HASS electives. Any HASS-flagged subject counts.",
+      "rule_notes": "Up to 2 of the 8 total HASS subjects may be taken on a P/D/F basis."
+    }
+  },
+
+  "communication": {
+    "_comment": "Communication Requirement — 4 CI subjects total, paced across 4 years.",
+    "total_subjects_required": 4,
+    "ci_h": {
+      "category": "CI-H",
+      "courses_required": 2,
+      "description": "Two Communication-Intensive subjects in HASS (CI-H or CI-HW). These also count toward the HASS requirement. Pacing: one should be taken freshman year, one sophomore year.",
+      "rule_notes": "CI-H subjects are offered by HASS departments. CI-HW subjects additionally fulfill a writing requirement. Both count as CI-H for this requirement."
+    },
+    "ci_m": {
+      "category": "CI-M",
+      "courses_required": 2,
+      "description": "Two Communication-Intensive subjects in the Major (CI-M). These are specific to each major — see major requirements for which courses qualify.",
+      "rule_notes": "CI-M subjects are designated by each department. A list of CI-M subjects for each major is available on the department's website."
+    },
+    "pacing": "One CI subject per year is recommended. CI-H subjects are typically taken in freshman and sophomore year; CI-M subjects in junior and senior year."
+  },
+
+  "physical_education": {
+    "_comment": "PE requirement — swim test + 4 PE courses (8 points). Must complete by end of sophomore year.",
+    "category": "Physical Education",
+    "swim_test": true,
+    "pe_points_required": 8,
+    "pe_points_per_course": 2,
+    "deadline": "End of sophomore year",
+    "description": "Pass the swim test and earn 8 PE points (4 PE courses at 2 points each) by the end of sophomore year."
+  },
+
+  "total_gir_subjects": 17,
+  "total_gir_units_approx": 198,
+  "departmental_units_beyond_girs": "180-198 additional units",
+  "unrestricted_elective_minimum": 48,
+
+  "double_counting_notes": "Between 1 and 6 subjects in a student's major may also satisfy GIRs. The units for any subject that counts as one of the 17 GIR subjects cannot also be counted as units required beyond the GIRs."
+}
