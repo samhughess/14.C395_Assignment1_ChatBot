@@ -29,16 +29,17 @@ def _load_json(filename):
             return json.load(f)
     return None
 
+
 COURSES_LIST = _load_json("courses.json") or []
 COURSES = {c["subject_id"]: c for c in COURSES_LIST}
 MAJORS = _load_json("majors.json") or {}
 GIRS = _load_json("girs.json") or {}
 
-
 # ─── Load backend tools (graceful if not available) ─────────
 
 try:
     from requirements import RequirementsTracker
+
     _tracker = RequirementsTracker(data_dir=DATA_DIR)
 except Exception as e:
     print(f"[chat.py] Warning: RequirementsTracker not loaded: {e}")
@@ -46,6 +47,7 @@ except Exception as e:
 
 try:
     from planner import SemesterPlanner
+
     _planner = SemesterPlanner(data_dir=DATA_DIR)
 except Exception as e:
     print(f"[chat.py] Warning: SemesterPlanner not loaded: {e}")
@@ -53,6 +55,7 @@ except Exception as e:
 
 try:
     from scheduler import Scheduler
+
     _scheduler = Scheduler(os.path.join(DATA_DIR, "courses.json"))
 except Exception as e:
     print(f"[chat.py] Warning: Scheduler not loaded: {e}")
@@ -60,8 +63,10 @@ except Exception as e:
 
 try:
     from scoring import (CourseScorer, compute_candidate_factors, fill_interest_defaults,
+                         fill_interest_from_embeddings,
                          detect_signals, apply_signals, DEFAULT_DIM_WEIGHTS,
                          FRAMEWORK_PROFILES)
+
     _scoring_available = True
 except Exception as e:
     print(f"[chat.py] Warning: scoring module not loaded: {e}")
@@ -78,18 +83,20 @@ class SemesterPlan:
 
     def __init__(self):
         self.active = False
-        self.semester_type = None       # "fall" or "spring"
-        self.planned_courses = []       # courses picked so far
+        self.semester_type = None  # "fall" or "spring"
+        self.planned_courses = []  # courses picked so far
         self.planned_units = 0
-        self.priority = None            # student's stated priority/interests
-        self.stage = None               # "initiated", "gathering_prefs", "suggesting", "finalizing"
-        self.feasible_candidates = []   # pre-vetted by Python
+        self.priority = None  # student's stated priority/interests
+        self.stage = None  # "initiated", "gathering_prefs", "suggesting", "finalizing"
+        self.feasible_candidates = []  # pre-vetted by Python
         self.scorer = CourseScorer(model="multidimensional") if _scoring_available else None
         # Profile scores — running weights for each framework profile (sum to 1)
         # Start equal; BOOST/REDUCE signals accumulate across turns
         self.profile_scores = {p: 1.0 / len(self.PROFILE_NAMES)
                                for p in self.PROFILE_NAMES}
         self._active_profile = "balanced"
+        # Stored suggested plans from gathering_prefs stage (for plan selection by name)
+        self.suggested_plans = []  # list of plan dicts from _build_semester_plans
 
     def reset(self):
         self.__init__()
@@ -392,15 +399,17 @@ def detect_intent(message):
                     "how close", "progress", "left to take", "gir", "hass",
                     "ci-h", "ci-m", "rest requirement"]
     schedule_keywords = ["schedule", "conflict", "time slot", "overlap",
-                        "fit together", "weekly"]
+                         "fit together", "weekly"]
     plan_keywords = ["plan", "next semester", "graduate", "feasib",
-                    "critical path", "how many semesters", "sequence",
-                    "what order", "roadmap"]
+                     "critical path", "how many semesters", "sequence",
+                     "what order", "roadmap"]
     semester_build_keywords = ["what else", "fill in", "round out", "complete my semester",
-                              "what should i add", "other courses", "go with",
-                              "pair with", "alongside", "take with"]
+                               "what should i add", "what should i take", "what course",
+                               "other courses", "go with", "fourth class", "fourth course",
+                               "pair with", "alongside", "take with", "what to take",
+                               "suggest", "recommend"]
     profile_keywords = ["i'm a", "i am a", "my major", "i've taken",
-                       "i have taken", "my courses", "i'm in course"]
+                        "i have taken", "my courses", "i'm in course"]
 
     if any(kw in msg_lower for kw in profile_keywords):
         return Intent.PROFILE_UPDATE, {"course_ids": valid_ids}
@@ -408,7 +417,10 @@ def detect_intent(message):
         return Intent.REQUIREMENTS, {"course_ids": valid_ids}
 
     # Semester build: student mentions specific courses + asking for suggestions
+    # Also triggers if student mentions courses + planning keywords (they have courses in mind)
     if valid_ids and any(kw in msg_lower for kw in semester_build_keywords):
+        return Intent.SEMESTER_BUILD, {"course_ids": valid_ids}
+    if valid_ids and any(kw in msg_lower for kw in plan_keywords):
         return Intent.SEMESTER_BUILD, {"course_ids": valid_ids}
 
     if any(kw in msg_lower for kw in plan_keywords):
@@ -490,7 +502,7 @@ def execute_requirements_check(profile):
         if not group["done"]:
             opts = ", ".join(group["options"][:5])
             if len(group["options"]) > 5:
-                opts += f" (+{len(group['options'])-5} more)"
+                opts += f" (+{len(group['options']) - 5} more)"
             parts.append(f"{group['name']}: need {group['remaining_needed']} more — options: {opts}")
 
     if not major["ci_m"]["done"]:
@@ -573,7 +585,8 @@ def execute_scheduling(course_ids):
     results = _scheduler.find_schedules(courses_with_schedules)
     if results:
         total_units = results[0]["total_units"]
-        parts.append(f"✅ No conflicts found! {len(courses_with_schedules)} courses can be taken together ({total_units} units).")
+        parts.append(
+            f"✅ No conflicts found! {len(courses_with_schedules)} courses can be taken together ({total_units} units).")
         for cid in courses_with_schedules:
             c = COURSES.get(cid, {})
             parts.append(f"  {cid} - {c.get('title', '?')} ({c.get('total_units', '?')}u)")
@@ -676,7 +689,7 @@ def get_feasible_candidates(profile):
 
         freq = _planner.get_offering_frequency(cid) if _planner else "unknown"
         is_ci_m = bool(course.get("communication_requirement", "")
-                      and "CI-M" in course.get("communication_requirement", ""))
+                       and "CI-M" in course.get("communication_requirement", ""))
 
         # Critical path scoring
         if cid in critical_set:
@@ -755,7 +768,6 @@ workload_balancer: [BOOST/REDUCE/KEEP]
 career_strategist: [BOOST/REDUCE/KEEP]
 balanced: [BOOST/REDUCE/KEEP]"""
 
-
 _PROFILE_NAMES = ["requirements_optimizer", "interest_explorer",
                   "workload_balancer", "career_strategist", "balanced"]
 
@@ -826,6 +838,378 @@ def _llm_detect_signals(message, client):
         return detect_signals(message), {}
 
 
+def _build_requirements_summary(profile):
+    """Build a concise requirements summary for the initiated stage."""
+    if not _tracker or not profile.major_id:
+        return None
+
+    try:
+        status = _tracker.get_status(profile.major_id, profile.courses_taken)
+    except Exception:
+        return None
+
+    parts = []
+    major_name = MAJORS.get(profile.major_id, {}).get("name", profile.major_id)
+    parts.append(f"REQUIREMENTS SUMMARY for {profile.major_id} ({major_name}):")
+
+    # Major progress
+    req = status["major_status"]["required_courses"]
+    remaining_count = len(req.get("remaining", []))
+    total = req.get("total", 0)
+    parts.append(f"  Major: {total - remaining_count}/{total} required courses done, {remaining_count} remaining")
+
+    # Unfulfilled select groups
+    unfulfilled_groups = [g for g in status["major_status"]["select_groups"] if not g["done"]]
+    if unfulfilled_groups:
+        group_names = [f"{g['name']} (need {g['remaining_needed']})" for g in unfulfilled_groups[:4]]
+        parts.append(f"  Open requirement groups: {', '.join(group_names)}")
+
+    # CI-M
+    ci_m = status["major_status"]["ci_m"]
+    if not ci_m["done"]:
+        parts.append(f"  CI-M: need {ci_m['remaining_needed']} more")
+
+    # GIRs
+    gir = status["gir_status"]
+    gir_remaining = []
+    for cat, info in gir.items():
+        if cat == "HASS":
+            if not info["done"]:
+                gir_remaining.append(f"HASS ({info['count']}/{info['required']})")
+        else:
+            if not info["done"]:
+                gir_remaining.append(cat)
+    if gir_remaining:
+        parts.append(f"  GIRs still needed: {', '.join(gir_remaining)}")
+
+    # Critical paths
+    if _planner:
+        try:
+            paths = _planner.find_critical_paths(profile.major_id, profile.courses_taken)
+            if paths:
+                longest = paths[0]
+                parts.append(f"  Critical prereq chain: {' → '.join(longest)} ({len(longest)} semesters)")
+        except Exception:
+            pass
+
+    return "\n".join(parts)
+
+
+def _get_missing_info(profile, plan):
+    """
+    Determine what information is missing for good recommendations.
+    Returns a list of strings describing what to ask about, ordered by importance.
+    """
+    missing = []
+
+    # Check if interests have been stated
+    has_interest_signal = False
+    if plan.scorer:
+        # Check if any interest-related signals have been applied
+        for signal_set in plan.scorer.signal_history:
+            if "interest" in signal_set:
+                has_interest_signal = True
+                break
+    if plan.priority and any(kw in plan.priority.lower() for kw in
+                             ["interest", "like", "enjoy", "curious", "career", "goal"]):
+        has_interest_signal = True
+
+    if not has_interest_signal:
+        missing.append(
+            "Interests/goals: What topics or career directions interest the student? (e.g., ML, systems, theory, quant finance)")
+
+    # Check if workload constraints are known
+    has_feasibility_signal = False
+    if plan.scorer:
+        for signal_set in plan.scorer.signal_history:
+            if "feasibility" in signal_set:
+                has_feasibility_signal = True
+                break
+
+    if not has_feasibility_signal:
+        missing.append("Workload constraints: Does the student have a UROP, job, athletics, or other time commitments?")
+
+    # Check if they have specific courses in mind
+    if not plan.planned_courses:
+        missing.append("Specific courses: Does the student already have any courses in mind for this semester?")
+
+    # If we somehow have everything, ask about preferences
+    if not missing:
+        missing.append(
+            "Course format preference: Does the student prefer project-based, lecture-based, or lab-based courses?")
+
+    return missing
+
+
+def _get_course_hours(cid):
+    """Get total estimated hours/week for a course."""
+    c = COURSES.get(cid, {})
+    ih = c.get("in_class_hours") or 0
+    oh = c.get("out_of_class_hours") or 0
+    return ih + oh
+
+
+def _score_to_5(score, ranked_scores):
+    """Convert a raw model score to a 1-5 scale based on the ranked score distribution."""
+    if not ranked_scores:
+        return 3
+    min_s = min(ranked_scores)
+    max_s = max(ranked_scores)
+    if max_s == min_s:
+        return 3
+    normalized = (score - min_s) / (max_s - min_s)  # 0-1
+    return max(1, min(5, round(1 + normalized * 4)))
+
+
+def _build_semester_plans(ranked, candidates, profile, plan):
+    """
+    Construct 3 feasible semester plans from ranked candidates.
+
+    Each plan has 4 courses: 3 major + 1 GIR/HASS (or 4 major if no HASS needed).
+    No two courses in a plan fill the same requirement group.
+
+    Plan A (Requirements-focused): top courses by overall score
+    Plan B (Interest-oriented): top courses by interest dimension score
+    Plan C (Lighter load): 4 courses with lowest total hours/week
+
+    Returns list of plan dicts.
+    """
+    cid_to_info = {c["course_id"]: c for c in candidates}
+    max_units = profile.max_units - plan.planned_units
+
+    # Categorize courses
+    major_pool = []
+    hass_pool = []
+    for cid, score, details in ranked:
+        info = cid_to_info.get(cid, {})
+        req = info.get("requirement_filled", "")
+        hours = _get_course_hours(cid)
+        entry = {"cid": cid, "score": score, "details": details, "req": req,
+                 "units": COURSES.get(cid, {}).get("total_units", 12), "hours": hours}
+        if "HASS" in req or req in ("REST", "CI-H"):
+            hass_pool.append(entry)
+        else:
+            major_pool.append(entry)
+
+    def _pick_plan(major_sorted, hass_sorted, target_count=4):
+        """Pick courses avoiding duplicate requirement groups. Always tries to fill target_count courses.
+        Prefers 3 major + 1 HASS, but fills with extra major courses if HASS pool is empty.
+        If a greedy pick blocks the last slot due to unit cap, retries skipping the blocker."""
+
+        def _try_pick(major_list, hass_list, skip_cids=None):
+            skip_cids = skip_cids or set()
+            reqs_used = set()
+            picked = []
+            total_units = 0
+
+            hass_available = len([e for e in hass_list if e["cid"] not in skip_cids])
+            n_major_target = target_count - (1 if hass_available > 0 else 0)
+
+            # First pass: major courses
+            for e in major_list:
+                if len(picked) >= n_major_target:
+                    break
+                if e["cid"] in skip_cids:
+                    continue
+                if e["req"] and e["req"] in reqs_used:
+                    continue
+                if total_units + e["units"] > max_units:
+                    continue
+                picked.append(e)
+                total_units += e["units"]
+                if e["req"]:
+                    reqs_used.add(e["req"])
+
+            # Second pass: HASS/GIR courses
+            for e in hass_list:
+                if len(picked) >= target_count:
+                    break
+                if e["cid"] in skip_cids:
+                    continue
+                if e["req"] and e["req"] in reqs_used:
+                    continue
+                if total_units + e["units"] > max_units:
+                    continue
+                picked.append(e)
+                total_units += e["units"]
+                if e["req"]:
+                    reqs_used.add(e["req"])
+
+            # Third pass: backfill with more major courses if under target
+            if len(picked) < target_count:
+                for e in major_list:
+                    if len(picked) >= target_count:
+                        break
+                    if e["cid"] in skip_cids:
+                        continue
+                    if any(e["cid"] == p["cid"] for p in picked):
+                        continue
+                    if e["req"] and e["req"] in reqs_used:
+                        continue
+                    if total_units + e["units"] > max_units:
+                        continue
+                    picked.append(e)
+                    total_units += e["units"]
+                    if e["req"]:
+                        reqs_used.add(e["req"])
+
+            total_hours = sum(e["hours"] for e in picked)
+            return picked, total_units, total_hours
+
+        # First attempt: greedy
+        picked, total_units, total_hours = _try_pick(major_sorted, hass_sorted)
+
+        # If we didn't fill target_count, retry by skipping the largest-unit course
+        if len(picked) < target_count:
+            # Find courses in the pick that are above 12 units (standard) and try skipping them
+            for big_course in sorted(picked, key=lambda e: e["units"], reverse=True):
+                if big_course["units"] > 12:
+                    retry, ru, rh = _try_pick(major_sorted, hass_sorted, skip_cids={big_course["cid"]})
+                    if len(retry) >= target_count:
+                        return retry, ru, rh
+                    # Also try skipping the big course entirely from pool
+            # If still can't fill, return what we have
+
+        return picked, total_units, total_hours
+
+    plans = []
+
+    # Debug: show pool sizes
+    print(
+        f"[DEBUG _build_semester_plans] major_pool={len(major_pool)}, hass_pool={len(hass_pool)}, max_units={max_units}")
+    for e in major_pool[:5]:
+        print(f"  major: {e['cid']} req={e['req']} hrs={e['hours']:.0f}")
+    for e in hass_pool[:5]:
+        print(f"  hass: {e['cid']} req={e['req']} hrs={e['hours']:.0f}")
+
+    # Plan A: Requirements-focused — by overall score (already sorted)
+    plan_a, units_a, hours_a = _pick_plan(major_pool, hass_pool)
+    print(f"[DEBUG] Plan A: {len(plan_a)} courses, {units_a}u, {hours_a:.0f}hrs — {[e['cid'] for e in plan_a]}")
+    if plan_a:
+        plans.append({
+            "label": "Requirements-focused",
+            "description": "Prioritizes courses that make the most progress toward graduation",
+            "courses": [(e["cid"], e["units"], e["hours"], e["req"]) for e in plan_a],
+            "total_units": units_a,
+            "total_hours": hours_a,
+        })
+
+    # Plan B: Interest-oriented — sort by interest score, break ties with rating + lower hours
+    # This ensures Plan B differs from Plan A even when interest defaults to 0.5
+    major_by_interest = sorted(major_pool,
+                               key=lambda e: (
+                                   e["details"].get("dim_scores", {}).get("interest", 0),
+                                   e["details"].get("dim_scores", {}).get("feasibility", 0),  # prefer lighter courses
+                               ), reverse=True)
+    hass_by_interest = sorted(hass_pool,
+                              key=lambda e: (
+                                  e["details"].get("dim_scores", {}).get("interest", 0),
+                                  e["details"].get("dim_scores", {}).get("feasibility", 0),
+                              ), reverse=True)
+    plan_b, units_b, hours_b = _pick_plan(major_by_interest, hass_by_interest)
+    print(f"[DEBUG] Plan B: {len(plan_b)} courses, {units_b}u, {hours_b:.0f}hrs — {[e['cid'] for e in plan_b]}")
+    plan_a_set = set(e["cid"] for e in plan_a) if plan_a else set()
+    plan_b_set = set(e["cid"] for e in plan_b) if plan_b else set()
+    # If Plan B is identical to Plan A, try a more aggressive alternative:
+    # pick courses with highest feasibility (rating + low workload) that aren't in Plan A
+    if plan_b_set == plan_a_set:
+        major_alt = sorted(
+            [e for e in major_pool if e["cid"] not in plan_a_set],
+            key=lambda e: e["details"].get("dim_scores", {}).get("interest", 0), reverse=True
+        ) + [e for e in major_pool if e["cid"] in plan_a_set]
+        plan_b, units_b, hours_b = _pick_plan(major_alt, hass_by_interest)
+        plan_b_set = set(e["cid"] for e in plan_b) if plan_b else set()
+        print(
+            f"[DEBUG] Plan B (alt): {len(plan_b)} courses, {units_b}u, {hours_b:.0f}hrs — {[e['cid'] for e in plan_b]}")
+    if plan_b and plan_b_set != plan_a_set:
+        plans.append({
+            "label": "Interest-oriented",
+            "description": "Prioritizes courses matching the student's stated interests",
+            "courses": [(e["cid"], e["units"], e["hours"], e["req"]) for e in plan_b],
+            "total_units": units_b,
+            "total_hours": hours_b,
+        })
+
+    # Plan C: Lighter load — same number of courses, sorted by lowest hours
+    major_by_hours = sorted(major_pool, key=lambda e: e["hours"])
+    hass_by_hours = sorted(hass_pool, key=lambda e: e["hours"])
+    plan_c, units_c, hours_c = _pick_plan(major_by_hours, hass_by_hours)
+    print(f"[DEBUG] Plan C: {len(plan_c)} courses, {units_c}u, {hours_c:.0f}hrs — {[e['cid'] for e in plan_c]}")
+    plan_c_set = set(e["cid"] for e in plan_c) if plan_c else set()
+    if plan_c and plan_c_set != plan_a_set and plan_c_set != plan_b_set:
+        plans.append({
+            "label": "Lighter load",
+            "description": "Same number of courses, but picks the ones with the fewest hours/week",
+            "courses": [(e["cid"], e["units"], e["hours"], e["req"]) for e in plan_c],
+            "total_units": units_c,
+            "total_hours": hours_c,
+        })
+
+    # Plan D: Technical heavy — 4 major courses, prioritize necessity (no HASS slot)
+    major_by_necessity = sorted(major_pool,
+                                key=lambda e: e["details"].get("dim_scores", {}).get("necessity", 0), reverse=True)
+    plan_d, units_d, hours_d = _pick_plan(major_by_necessity, [], target_count=4)  # empty hass pool forces all major
+    print(f"[DEBUG] Plan D: {len(plan_d)} courses, {units_d}u, {hours_d:.0f}hrs — {[e['cid'] for e in plan_d]}")
+    plan_d_set = set(e["cid"] for e in plan_d) if plan_d else set()
+    existing_sets = [s for s in [plan_a_set, plan_b_set, plan_c_set] if s]
+    if plan_d and plan_d_set not in existing_sets:
+        plans.append({
+            "label": "Technical heavy",
+            "description": "All 4 courses are major requirements — maximum progress toward degree",
+            "courses": [(e["cid"], e["units"], e["hours"], e["req"]) for e in plan_d],
+            "total_units": units_d,
+            "total_hours": hours_d,
+        })
+
+    return plans
+
+
+def _detect_plan_selection(msg_lower, suggested_plans):
+    """
+    Detect if the student is selecting one of the suggested plans by name.
+    Returns the matching plan dict, or None if no match.
+
+    Matches on plan labels (e.g., "requirements-focused", "lighter load"),
+    plan numbers ("plan 1", "plan A", "the first plan", "option 2"),
+    and descriptive references ("the light one", "the ML plan", "interest").
+    """
+    if not suggested_plans:
+        return None
+
+    # Check for plan number references
+    number_patterns = [
+        (r'\bplan\s*(?:a|1|one)\b|\bfirst\s+(?:plan|option)\b|\boption\s*(?:a|1|one)\b', 0),
+        (r'\bplan\s*(?:b|2|two)\b|\bsecond\s+(?:plan|option)\b|\boption\s*(?:b|2|two)\b', 1),
+        (r'\bplan\s*(?:c|3|three)\b|\bthird\s+(?:plan|option)\b|\boption\s*(?:c|3|three)\b', 2),
+        (r'\bplan\s*(?:d|4|four)\b|\bfourth\s+(?:plan|option)\b|\boption\s*(?:d|4|four)\b', 3),
+    ]
+    for pattern, idx in number_patterns:
+        if re.search(pattern, msg_lower) and idx < len(suggested_plans):
+            return suggested_plans[idx]
+
+    # Check for label keyword matches
+    label_keywords = {
+        "requirements": ["requirement", "progress", "graduate", "efficient"],
+        "interest": ["interest", "ml", "ai", "machine learning", "explore", "fun"],
+        "lighter": ["light", "easy", "manageable", "less work", "fewer hours"],
+        "technical": ["technical", "heavy", "all major", "maximum progress", "hardcore"],
+    }
+
+    for plan in suggested_plans:
+        plan_label = plan["label"].lower()
+        for label_key, keywords in label_keywords.items():
+            if label_key in plan_label:
+                for kw in keywords:
+                    if kw in msg_lower and any(
+                            trigger in msg_lower for trigger in
+                            ["go with", "like", "pick", "choose", "let's do", "sounds good",
+                             "that one", "prefer", "want the", "take the"]
+                    ):
+                        return plan
+
+    return None
+
+
 def build_semester_context(profile, stage_override=None, llm_client=None):
     """
     Build the full context string for the semester planning conversation.
@@ -862,31 +1246,53 @@ def build_semester_context(profile, stage_override=None, llm_client=None):
 
     # Stage-specific instructions for the LLM
     if stage == "initiated":
-        parts.append(f"\nINSTRUCTIONS: The student just started planning their {semester_type} semester.")
-        parts.append("Confirm the planned course(s), show units and what requirement they fill.")
-        parts.append("Then ask the student what their priority is for the rest of the semester:")
-        parts.append("- Knock out core/GIR requirements")
-        parts.append("- Explore an area of interest (ask what interests them)")
-        parts.append("- Keep the workload balanced")
-        parts.append("- Something specific they have in mind")
-        parts.append("Do NOT suggest any courses yet. Just ask about priorities.")
+        # Build requirements summary for context
+        req_summary = _build_requirements_summary(profile)
+        if req_summary:
+            parts.append(f"\n{req_summary}")
+
+        # Determine what info is missing for targeted follow-up
+        missing_info = _get_missing_info(profile, plan)
+
+        parts.append(f"\nINSTRUCTIONS: The student wants to plan their {semester_type} semester.")
+        parts.append("1. Briefly confirm their profile (major, year, courses remaining).")
+        parts.append(
+            "2. Highlight the most urgent items: critical prerequisite chains, fall/spring-only courses, CI-M if needed.")
+        parts.append("3. Ask a SPECIFIC follow-up question to gather the missing information listed below.")
+        parts.append("   Do NOT suggest specific courses yet — you need their preferences first.")
+        parts.append("   Do NOT give generic advice like 'check prerequisites' or 'talk to your advisor'.")
+        parts.append(f"\nMISSING INFORMATION — ask about ONE of these:")
+        for item in missing_info:
+            parts.append(f"  - {item}")
+        parts.append("\nPick the most important missing item and ask about it naturally in conversation.")
 
     elif stage == "gathering_prefs":
-        parts.append(f"\nINSTRUCTIONS: The student stated their priorities. Now recommend courses.")
-        parts.append("Below is a RANKED SCORECARD of feasible candidates, scored by our decision model.")
-        parts.append("Courses are ranked by a weighted combination of necessity, interest, and feasibility factors.")
-        parts.append("Use ONLY these candidates. Do NOT suggest any other courses.")
-        parts.append("Recommend the top 3-5 courses. For each, explain WHY using the dimensional scores")
-        parts.append("(e.g., 'high necessity because it unlocks future courses' or 'strong interest match').")
-        parts.append("If a student's interest conflicts with strategic urgency, note the tradeoff.")
-        parts.append("Ask which one(s) they'd like to add.\n")
+        parts.append(f"\nINSTRUCTIONS: The student has shared their preferences. Present course recommendations.")
+        parts.append("")
+        parts.append("RESPONSE FORMAT:")
+        parts.append("1. Present the SCORED CANDIDATE LIST below. For each course, use the score (1-5),")
+        parts.append("   requirement, and description to write a one-sentence reason explaining why this")
+        parts.append("   specific course fits THIS student. Do NOT repeat the same reason for every course.")
+        parts.append("   Differentiate: what makes each course a distinct option?")
+        parts.append("")
+        parts.append("2. Present the SUGGESTED PLANS below exactly as provided (they are pre-built by our")
+        parts.append("   system to avoid schedule conflicts and duplicate requirements). Show the total hours.")
+        parts.append("")
+        parts.append("3. End with ONE specific follow-up question that references a concrete tradeoff between")
+        parts.append("   the plans. Example: 'Plan A gets you through the prereq chain fastest, but Plan B")
+        parts.append("   includes the ML courses you mentioned — which matters more to you right now?'")
+        parts.append("")
+        parts.append("Do NOT:")
+        parts.append("- Suggest courses not in the candidate list")
+        parts.append("- Modify the suggested plans (add/remove courses)")
+        parts.append("- Add generic advice ('check prerequisites', 'talk to your advisor')")
+        parts.append("- Use the same reason for multiple courses\n")
 
         candidates = get_feasible_candidates(profile)
         plan.feasible_candidates = candidates
 
         if candidates and _scoring_available and plan.scorer:
             # Apply signals from the student's priority statement
-            # Use LLM-based detection if client available, fall back to regex
             if plan.priority:
                 if llm_client:
                     dim_signals, profile_signals = _llm_detect_signals(plan.priority, llm_client)
@@ -900,45 +1306,72 @@ def build_semester_context(profile, stage_override=None, llm_client=None):
 
             # Score candidates
             raw_factors = compute_candidate_factors(candidates, profile.max_units, plan.planned_units)
-            filled = fill_interest_defaults(raw_factors)
+
+            # Use embedding-based interest scoring if student has stated interests
+            if plan.priority:
+                filled = fill_interest_from_embeddings(raw_factors, plan.priority, COURSES)
+            else:
+                filled = fill_interest_defaults(raw_factors)
+
             ranked = plan.scorer.score_candidates(filled)
 
+            # State info
             state = plan.scorer.get_state()
             w = state["dim_weights"]
-            parts.append(f"CURRENT WEIGHTS: necessity={w['necessity']:.2f}, interest={w['interest']:.2f}, feasibility={w['feasibility']:.2f}")
+            parts.append(
+                f"CURRENT WEIGHTS: necessity={w['necessity']:.2f}, interest={w['interest']:.2f}, feasibility={w['feasibility']:.2f}")
             parts.append(f"ACTIVE PROFILE: {plan._active_profile}")
             ps = plan.profile_scores
-            parts.append(f"PROFILE SCORES: {', '.join(f'{p}={s:.2f}' for p, s in sorted(ps.items(), key=lambda x: -x[1]))}\n")
+            parts.append(
+                f"PROFILE SCORES: {', '.join(f'{p}={s:.2f}' for p, s in sorted(ps.items(), key=lambda x: -x[1]))}\n")
 
-            parts.append(f"RANKED SCORECARD ({len(ranked)} courses, all prereqs met, no schedule conflicts):\n")
-            for rank, (cid, score, details) in enumerate(ranked, 1):
+            # Convert scores to 1-5 scale
+            all_scores = [score for _, score, _ in ranked]
+
+            # Build scorecard with 1-5 scores, hours, and description
+            top_n = ranked[:7]  # show top 6-7 candidates
+            parts.append(f"SCORED CANDIDATE LIST ({len(top_n)} of {len(ranked)} feasible courses):\n")
+            for rank, (cid, score, details) in enumerate(top_n, 1):
                 c = next((x for x in candidates if x["course_id"] == cid), {})
                 ds = details.get("dim_scores", {})
-                parts.append(f"  #{rank}  {cid} — {c.get('title', '?')} ({c.get('units', '?')}u)  SCORE: {score:.3f}")
-                parts.append(f"    Requirement: {c.get('requirement_filled', '?')}")
-                parts.append(f"    Necessity: {ds.get('necessity', 0):.2f}  Interest: {ds.get('interest', 0):.2f}  Feasibility: {ds.get('feasibility', 0):.2f}")
+                score_5 = _score_to_5(score, all_scores)
+                hours = _get_course_hours(cid)
 
-                # Key tags for LLM context
+                parts.append(
+                    f"  #{rank}  {cid} — {c.get('title', '?')} ({c.get('units', '?')}u, ~{hours:.0f} hrs/wk)  Score: {score_5}/5")
+                parts.append(f"    Requirement: {c.get('requirement_filled', '?')}")
+
+                # Key context for differentiated reasons
                 tags = []
                 if c.get("critical_path", "NONE") != "NONE":
-                    tags.append(f"Critical path: {c['critical_path']} ({c.get('critical_detail', '')})")
+                    tags.append(f"Critical path: {c.get('critical_detail', 'unlocks future courses')}")
                 if c.get("scarcity") not in ("both", "unknown", None):
-                    tags.append(f"{c['scarcity'].replace('_', ' ').title()} — take now or wait a year")
+                    tags.append(f"Only offered in {c['scarcity'].replace('_', ' ')} — take now or wait a year")
                 if c.get("efficiency") == "DOUBLE_COUNTS":
-                    tags.append(f"Double-counts: {c.get('efficiency_detail', '')}")
+                    tags.append(f"Double-counts: {c.get('efficiency_detail', 'satisfies multiple groups')}")
                 if c.get("ci_m_value") == "NEEDED":
-                    tags.append("CI-M needed")
+                    tags.append("Fulfills CI-M requirement")
                 if c.get("rating"):
-                    tags.append(f"Rating: {c['rating']:.1f}/7")
-                if c.get("in_class_hours") and c.get("out_of_class_hours"):
-                    total_hrs = (c["in_class_hours"] or 0) + (c["out_of_class_hours"] or 0)
-                    tags.append(f"Workload: ~{total_hrs:.0f} hrs/week")
-                for tag in tags:
-                    parts.append(f"    • {tag}")
-                parts.append(f"    Description: {c.get('description', '')[:200]}")
+                    tags.append(f"Student rating: {c['rating']:.1f}/7")
+                if tags:
+                    parts.append(f"    Key facts: {'; '.join(tags)}")
+                parts.append(f"    Description: {c.get('description', '')[:250]}")
                 parts.append("")
+
+            # Build plans in Python
+            semester_plans = _build_semester_plans(ranked, candidates, profile, plan)
+            plan.suggested_plans = semester_plans  # store for plan selection by name
+            if semester_plans:
+                parts.append("SUGGESTED PLANS (pre-built, no requirement conflicts):\n")
+                for sp in semester_plans:
+                    parts.append(f"  {sp['label']} ({sp['total_units']}u, ~{sp['total_hours']:.0f} hrs/wk total):")
+                    parts.append(f"    {sp['description']}")
+                    for cid, units, hours, req in sp["courses"]:
+                        title = COURSES.get(cid, {}).get("title", "?")
+                        parts.append(f"    - {cid} — {title} ({units}u, ~{hours:.0f} hrs/wk) [{req}]")
+                    parts.append("")
+
         elif candidates:
-            # Fallback: show candidates without scoring
             parts.append(f"CANDIDATE LIST ({len(candidates)} courses):\n")
             for c in candidates:
                 parts.append(f"  {c['course_id']} — {c['title']} ({c['units']}u) — {c['requirement_filled']}")
@@ -948,36 +1381,116 @@ def build_semester_context(profile, stage_override=None, llm_client=None):
             parts.append("No additional feasible candidates found.")
 
     elif stage == "suggesting":
-        parts.append(f"\nINSTRUCTIONS: The student chose a course to add.")
-        parts.append("Confirm the addition, show updated plan with total units.")
+        remaining_units = profile.max_units - plan.planned_units
+        remaining_slots = max(0, 4 - len(plan.planned_courses))
+        total_planned_hours = sum(_get_course_hours(cid) for cid in plan.planned_courses)
 
-        remaining = profile.max_units - plan.planned_units
-        if remaining >= 12:
-            parts.append("Then show remaining options with their strategic scores and ask if they want more.\n")
+        # Show current plan
+        parts.append(
+            f"\nCURRENT PLAN ({len(plan.planned_courses)}/4 courses, {plan.planned_units}u, ~{total_planned_hours:.0f} hrs/wk):")
+        for cid in plan.planned_courses:
+            course = COURSES.get(cid, {})
+            title = course.get("title", "?")
+            units = course.get("total_units", "?")
+            hours = _get_course_hours(cid)
+            parts.append(f"  ✓ {cid} — {title} ({units}u, ~{hours:.0f} hrs/wk)")
+
+        if remaining_slots == 0 or remaining_units < 12:
+            # Plan is full
+            parts.append(
+                f"\nThe semester plan is complete ({plan.planned_units}u, ~{total_planned_hours:.0f} hrs/wk total).")
+            parts.append("\nINSTRUCTIONS: The plan is full. Summarize the final plan.")
+            parts.append("Show all 4 courses with units, hours, and requirements.")
+            parts.append("Ask if the student is happy with this plan or wants to swap anything.")
+
+        else:
+            # Still have slots to fill — show scored candidates for remaining slots
+            parts.append(f"\n{remaining_slots} slot(s) remaining ({remaining_units}u available)\n")
+
             candidates = get_feasible_candidates(profile)
             plan.feasible_candidates = candidates
-            if candidates:
-                parts.append(f"REMAINING CANDIDATES ({len(candidates)}):")
-                for c in candidates[:10]:
+
+            if candidates and _scoring_available and plan.scorer:
+                # Score remaining candidates
+                raw_factors = compute_candidate_factors(candidates, profile.max_units, plan.planned_units)
+                if plan.priority:
+                    filled = fill_interest_from_embeddings(raw_factors, plan.priority, COURSES)
+                else:
+                    filled = fill_interest_defaults(raw_factors)
+                ranked = plan.scorer.score_candidates(filled)
+                all_scores = [score for _, score, _ in ranked]
+
+                # Show top candidates for remaining slots
+                n_show = min(remaining_slots + 3, len(ranked), 6)  # show a few more than slots remaining
+                parts.append(f"INSTRUCTIONS: The student has {remaining_slots} slot(s) left.")
+                if remaining_slots == 1:
+                    parts.append("Recommend the single best course from the list below with a clear reason.")
+                    parts.append("Also mention the runner-up as an alternative.")
+                else:
+                    parts.append(f"Recommend the top {remaining_slots} courses, with a brief reason for each.")
+                    parts.append("Also mention 1-2 alternatives if the student doesn't like the top picks.")
+                parts.append("For each course, use the score, hours, and key facts to explain the recommendation.")
+                parts.append("End with a specific question: ask if they want these courses or prefer an alternative.")
+                parts.append("Do NOT suggest courses not in this list. Do NOT add boilerplate advice.\n")
+
+                parts.append(f"TOP CANDIDATES FOR REMAINING SLOT(S):\n")
+                for rank, (cid, score, details) in enumerate(ranked[:n_show], 1):
+                    c = next((x for x in candidates if x["course_id"] == cid), {})
+                    score_5 = _score_to_5(score, all_scores)
+                    hours = _get_course_hours(cid)
+
+                    parts.append(
+                        f"  #{rank}  {cid} — {c.get('title', '?')} ({c.get('units', '?')}u, ~{hours:.0f} hrs/wk)  Score: {score_5}/5")
+                    parts.append(f"    Requirement: {c.get('requirement_filled', '?')}")
+
                     tags = []
-                    if c["critical_path"] != "NONE":
-                        tags.append(f"critical:{c['critical_path']}")
-                    if c["scarcity"] not in ("both", "unknown"):
-                        tags.append(f"{c['scarcity']}")
-                    if c["efficiency"] == "DOUBLE_COUNTS":
-                        tags.append("double-counts")
-                    if c["ci_m_value"] == "NEEDED":
-                        tags.append("CI-M needed")
-                    tag_str = f" [{', '.join(tags)}]" if tags else ""
-                    parts.append(f"  {c['course_id']} — {c['title']} ({c['units']}u) — {c['requirement_filled']}{tag_str}")
-                    parts.append(f"    Description: {c['description'][:150]}")
-        else:
-            parts.append("The semester is nearly full. Ask if they're happy with the plan or want to swap anything.")
+                    if c.get("critical_path", "NONE") != "NONE":
+                        tags.append(f"Critical path: {c.get('critical_detail', 'unlocks future courses')}")
+                    if c.get("scarcity") not in ("both", "unknown", None):
+                        tags.append(f"Only offered in {c['scarcity'].replace('_', ' ')}")
+                    if c.get("ci_m_value") == "NEEDED":
+                        tags.append("Fulfills CI-M requirement")
+                    if c.get("rating"):
+                        tags.append(f"Rating: {c['rating']:.1f}/7")
+                    if tags:
+                        parts.append(f"    Key facts: {'; '.join(tags)}")
+                    parts.append(f"    Description: {c.get('description', '')[:200]}")
+
+                    # Show what total plan would look like with this course
+                    new_total_hrs = total_planned_hours + hours
+                    new_total_units = plan.planned_units + (c.get("units") or 12)
+                    parts.append(f"    → Plan with this course: {new_total_units}u, ~{new_total_hrs:.0f} hrs/wk total")
+                    parts.append("")
+
+            elif candidates:
+                parts.append(f"REMAINING OPTIONS ({len(candidates)}):")
+                for c in candidates[:6]:
+                    hours = _get_course_hours(c["course_id"])
+                    parts.append(
+                        f"  {c['course_id']} — {c['title']} ({c['units']}u, ~{hours:.0f} hrs/wk) — {c['requirement_filled']}")
+            else:
+                parts.append("No additional feasible candidates found.")
 
     elif stage == "finalizing":
-        parts.append(f"\nINSTRUCTIONS: Summarize the final semester plan.")
-        parts.append("List all planned courses with units and requirements filled.")
-        parts.append("Mention total units and any notes (e.g., consider adding a HASS/CI-H if needed).")
+        total_hours = sum(_get_course_hours(cid) for cid in plan.planned_courses)
+        remaining_units = profile.max_units - plan.planned_units
+        parts.append(f"\nFINAL SEMESTER PLAN ({plan.planned_units}u, ~{total_hours:.0f} hrs/wk total):")
+        for cid in plan.planned_courses:
+            course = COURSES.get(cid, {})
+            title = course.get("title", "?")
+            units = course.get("total_units", "?")
+            hours = _get_course_hours(cid)
+            parts.append(f"  {cid} — {title} ({units}u, ~{hours:.0f} hrs/wk)")
+        parts.append(f"\nINSTRUCTIONS: Present the final semester plan clearly.")
+        parts.append("For each course, mention what requirement it fulfills.")
+        parts.append("Give the total units and estimated hours per week.")
+        if len(plan.planned_courses) < 4 and remaining_units >= 12:
+            parts.append(
+                f"Note: the student has {remaining_units} units of remaining capacity — they could add another course (HASS, elective, etc.) if they want.")
+        else:
+            parts.append(
+                f"This plan is COMPLETE at {len(plan.planned_courses)} courses and {plan.planned_units} units. The semester is full. Do not suggest adding more courses.")
+        parts.append("Ask if they're happy with this plan or want to swap any courses.")
 
     return "\n".join(parts)
 
@@ -1034,8 +1547,8 @@ class Chatbot:
             if ground_truth:
                 system += f"\n\n{ground_truth}"
                 system += ("\n\nThe GROUND TRUTH above is the authoritative source for this student's "
-                          "requirements. ONLY reference requirements listed above. Do NOT mention "
-                          "requirements from other majors.")
+                           "requirements. ONLY reference requirements listed above. Do NOT mention "
+                           "requirements from other majors.")
 
         elif self.profile.major_id or self.profile.courses_taken:
             system += f"\n\nPARTIAL STUDENT PROFILE:\n{self.profile.summary()}"
@@ -1087,12 +1600,83 @@ class Chatbot:
         intent, data = detect_intent(user_input)
         tool_context = None
 
-        # Step 3: Execute tools
-        if intent == Intent.COURSE_LOOKUP and data["course_ids"]:
+        # Debug: trace routing
+        plan = self.profile.semester_plan
+        print(f"[DEBUG ROUTING] intent={intent}, plan.active={plan.active}, plan.stage={plan.stage}")
+        print(f"[DEBUG ROUTING] planned_courses={plan.planned_courses}, planned_units={plan.planned_units}")
+        print(f"[DEBUG ROUTING] suggested_plans={len(plan.suggested_plans)}, priority={plan.priority is not None}")
+
+        # Handle ongoing semester planning FIRST — this takes priority over intent detection
+        # because messages during planning (plan selection, course picks, preferences) often
+        # contain keywords that match other intents ("plan", course IDs, etc.)
+        if self.profile.semester_plan.active and tool_context is None:
+            plan = self.profile.semester_plan
+            msg_lower = user_input.lower()
+
+            # Apply LLM signal detection on every message during planning
+            if plan.scorer and _scoring_available:
+                dim_signals, profile_signals = _llm_detect_signals(user_input, self.client)
+                if dim_signals:
+                    plan.scorer.apply_signal(dim_signals)
+                if profile_signals:
+                    plan.apply_profile_signals(profile_signals)
+
+            # Check if student is adding a course by mentioning course IDs
+            course_ids = re.findall(r'\b(\d{1,2}\.\w{2,5})\b', user_input)
+            valid_ids = [c for c in course_ids if c in COURSES]
+
+            # Check if student is selecting a suggested plan by name
+            selected_plan = _detect_plan_selection(msg_lower, plan.suggested_plans)
+
+            print(f"[DEBUG get_response] stage={plan.stage}, valid_ids={valid_ids}")
+            print(f"[DEBUG get_response] suggested_plans={len(plan.suggested_plans)} plans")
+            print(f"[DEBUG get_response] plan labels: {[p['label'] for p in plan.suggested_plans]}")
+            print(f"[DEBUG get_response] selected_plan={'YES: ' + selected_plan['label'] if selected_plan else 'None'}")
+            print(f"[DEBUG get_response] msg_lower: {msg_lower[:80]}")
+
+            if selected_plan:
+                # Student picked a plan — add all its courses
+                for cid, units, hours, req in selected_plan["courses"]:
+                    plan.add_course(cid, COURSES.get(cid, {}).get("total_units", units))
+                plan.stage = "finalizing"
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
+
+            elif valid_ids and plan.stage in ("gathering_prefs", "suggesting"):
+                # Student picked course(s)
+                for cid in valid_ids:
+                    course = COURSES.get(cid, {})
+                    if course:
+                        plan.add_course(cid, course.get("total_units", 12))
+                if len(plan.planned_courses) >= 4 or plan.planned_units >= self.profile.max_units - 6:
+                    plan.stage = "finalizing"
+                else:
+                    plan.stage = "suggesting"
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
+
+            elif plan.stage == "initiated":
+                plan.priority = user_input
+                plan.stage = "gathering_prefs"
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
+
+            elif plan.stage == "gathering_prefs":
+                plan.priority = user_input
+                plan.stage = "gathering_prefs"
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
+
+            elif any(kw in msg_lower for kw in ["done", "looks good", "that's it", "happy with",
+                                                "finalize", "good semester", "all set"]):
+                plan.stage = "finalizing"
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
+
+            else:
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
+
+        # Step 3: Execute tools (only if not already handled by active planning above)
+        if intent == Intent.COURSE_LOOKUP and data["course_ids"] and tool_context is None:
             results = execute_course_lookup(data["course_ids"])
             tool_context = json.dumps(results, indent=2)
 
-        elif intent == Intent.REQUIREMENTS:
+        elif intent == Intent.REQUIREMENTS and tool_context is None:
             if self.profile.is_complete():
                 result = execute_requirements_check(self.profile)
                 tool_context = result.get("summary", result.get("error", ""))
@@ -1104,10 +1688,23 @@ class Chatbot:
                     missing.append("what courses you've taken")
                 tool_context = f"MISSING INFO: To check requirements, I need: {', '.join(missing)}."
 
-        elif intent == Intent.PLANNING:
+        elif intent == Intent.PLANNING and tool_context is None:
             if self.profile.is_complete():
-                result = execute_planning(self.profile)
-                tool_context = result.get("summary", result.get("error", ""))
+                # Route to the scored semester planning flow
+                plan = self.profile.semester_plan
+                plan.active = True
+                plan.semester_type = "fall" if self.profile.next_is_fall else "spring"
+                plan.stage = "initiated"
+
+                # Apply signals from this message
+                if plan.scorer and _scoring_available:
+                    dim_signals, profile_signals = _llm_detect_signals(user_input, self.client)
+                    if dim_signals:
+                        plan.scorer.apply_signal(dim_signals)
+                    if profile_signals:
+                        plan.apply_profile_signals(profile_signals)
+
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
             else:
                 missing = []
                 if not self.profile.major_id:
@@ -1116,11 +1713,11 @@ class Chatbot:
                     missing.append("courses you've taken")
                 tool_context = f"MISSING INFO: To build a plan, I need: {', '.join(missing)}."
 
-        elif intent == Intent.SCHEDULING and data["course_ids"]:
+        elif intent == Intent.SCHEDULING and data["course_ids"] and tool_context is None:
             result = execute_scheduling(data["course_ids"])
             tool_context = result.get("summary", "")
 
-        elif intent == Intent.SEMESTER_BUILD and data["course_ids"]:
+        elif intent == Intent.SEMESTER_BUILD and data["course_ids"] and tool_context is None:
             if not self.profile.is_complete():
                 missing = []
                 if not self.profile.major_id:
@@ -1134,7 +1731,6 @@ class Chatbot:
                 if not plan.active:
                     plan.active = True
                     plan.semester_type = "fall" if self.profile.next_is_fall else "spring"
-                    plan.stage = "initiated"
 
                 # Add any mentioned courses to the plan
                 for cid in data["course_ids"]:
@@ -1142,57 +1738,19 @@ class Chatbot:
                     if course:
                         plan.add_course(cid, course.get("total_units", 12))
 
-                # Build context for LLM
-                tool_context = build_semester_context(self.profile, llm_client=self.client)
+                # Apply signals from this message
+                if plan.scorer and _scoring_available:
+                    dim_signals, profile_signals = _llm_detect_signals(user_input, self.client)
+                    if dim_signals:
+                        plan.scorer.apply_signal(dim_signals)
+                    if profile_signals:
+                        plan.apply_profile_signals(profile_signals)
 
-                # Advance stage for next turn
-                if plan.stage == "initiated":
-                    plan.stage = "gathering_prefs"
-
-        # Handle ongoing semester planning (student responding to preference question or picking courses)
-        elif self.profile.semester_plan.active:
-            plan = self.profile.semester_plan
-            msg_lower = user_input.lower()
-
-            # Apply LLM signal detection on every message during planning
-            # This accumulates BOOST/REDUCE signals across turns for both
-            # dimension weights and profile scores
-            if plan.scorer and _scoring_available:
-                dim_signals, profile_signals = _llm_detect_signals(user_input, self.client)
-                if dim_signals:
-                    plan.scorer.apply_signal(dim_signals)
-                if profile_signals:
-                    plan.apply_profile_signals(profile_signals)
-
-            # Check if student is adding a course by mentioning course IDs
-            course_ids = re.findall(r'\b(\d{1,2}\.\w{2,5})\b', user_input)
-            valid_ids = [c for c in course_ids if c in COURSES]
-
-            if valid_ids and plan.stage in ("gathering_prefs", "suggesting"):
-                # Student picked course(s)
-                for cid in valid_ids:
-                    course = COURSES.get(cid, {})
-                    if course:
-                        plan.add_course(cid, course.get("total_units", 12))
+                # Student already has courses — go straight to suggesting remaining
                 plan.stage = "suggesting"
                 tool_context = build_semester_context(self.profile, llm_client=self.client)
 
-            elif plan.stage == "gathering_prefs":
-                # Student stated their preferences — save and move to suggesting
-                plan.priority = user_input
-                plan.stage = "gathering_prefs"  # stays here — build_semester_context uses this to show candidates
-                tool_context = build_semester_context(self.profile, llm_client=self.client)
-
-            elif any(kw in msg_lower for kw in ["done", "looks good", "that's it", "happy with",
-                                                  "finalize", "good semester", "all set"]):
-                plan.stage = "finalizing"
-                tool_context = build_semester_context(self.profile, llm_client=self.client)
-
-            else:
-                # General follow-up during planning — show current state + candidates
-                tool_context = build_semester_context(self.profile, llm_client=self.client)
-
-        elif intent == Intent.PROFILE_UPDATE:
+        elif intent == Intent.PROFILE_UPDATE and tool_context is None:
             if self.profile.is_complete():
                 tool_context = (
                     f"Student profile updated:\n{self.profile.summary()}\n\n"
@@ -1207,10 +1765,14 @@ class Chatbot:
         # Step 4: Assemble prompt and call LLM
         messages = self.format_prompt(user_input, tool_context, history)
 
+        # Use more tokens for semester planning responses (scored lists + plans are long)
+        planning_active = self.profile.semester_plan.active
+        token_limit = 1500 if planning_active else 800
+
         try:
             response = self.client.chat_completion(
                 messages=messages,
-                max_tokens=800,
+                max_tokens=token_limit,
                 temperature=0.3,
             )
             return response.choices[0].message.content.strip()
@@ -1225,6 +1787,6 @@ class Chatbot:
                 return f"Sorry, I hit an error: {error_msg}"
 
     def update_profile_from_form(self, major_id=None, courses_str=None,
-                                  year=None, semesters_left=None, next_is_fall=None):
+                                 year=None, semesters_left=None, next_is_fall=None):
         self.profile.update_from_form(major_id, courses_str, year,
-                                       semesters_left, next_is_fall)
+                                      semesters_left, next_is_fall)

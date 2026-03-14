@@ -809,3 +809,150 @@ def compute_course_factors(course_ids, profile, courses_db, tracker=None, planne
         }
 
     return results
+
+
+# ─── Embedding-Based Interest Scoring ────────────────────────
+
+_embed_model = None
+_course_embeddings = None
+_course_embed_ids = None
+
+def _get_embed_model():
+    """Lazy-load the sentence embedding model."""
+    global _embed_model
+    if _embed_model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            _embed_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        except ImportError:
+            print("[scoring] Warning: sentence-transformers not installed. Interest scoring will use defaults.")
+            return None
+    return _embed_model
+
+
+def _get_course_embeddings(courses_db):
+    """Precompute and cache embeddings for all courses with descriptions."""
+    global _course_embeddings, _course_embed_ids
+    if _course_embeddings is not None:
+        return _course_embed_ids, _course_embeddings
+
+    model = _get_embed_model()
+    if model is None:
+        return None, None
+
+    cids = []
+    descriptions = []
+    for cid, course in courses_db.items():
+        desc = course.get("description", "")
+        title = course.get("title", "")
+        if desc and len(desc) > 20:
+            cids.append(cid)
+            descriptions.append(f"{title}. {desc[:500]}")
+
+    if not descriptions:
+        return None, None
+
+    _course_embed_ids = cids
+    _course_embeddings = model.encode(descriptions, show_progress_bar=False, batch_size=64)
+    return _course_embed_ids, _course_embeddings
+
+
+def compute_interest_scores(interest_statement, candidate_ids, courses_db):
+    """
+    Compute interest scores for candidate courses based on semantic similarity
+    between the student's interest statement and course descriptions.
+
+    Args:
+        interest_statement: student's interests (e.g., "I'm interested in ML and AI")
+        candidate_ids: list of course IDs to score
+        courses_db: dict {course_id: course_info} with descriptions
+
+    Returns:
+        dict {course_id: {"interest_match": float, "career_relevance": float,
+                          "learning_style_fit": float}}
+        Returns None if embeddings unavailable.
+    """
+    model = _get_embed_model()
+    if model is None:
+        return None
+
+    embed_ids, embed_matrix = _get_course_embeddings(courses_db)
+    if embed_ids is None:
+        return None
+
+    id_to_idx = {cid: i for i, cid in enumerate(embed_ids)}
+
+    from sklearn.metrics.pairwise import cosine_similarity
+    interest_emb = model.encode([interest_statement])
+
+    candidate_indices = []
+    candidate_cids = []
+    for cid in candidate_ids:
+        if cid in id_to_idx:
+            candidate_indices.append(id_to_idx[cid])
+            candidate_cids.append(cid)
+
+    if not candidate_indices:
+        return None
+
+    candidate_embeddings = embed_matrix[candidate_indices]
+    similarities = cosine_similarity(interest_emb, candidate_embeddings)[0]
+
+    # Normalize to 0.1-0.95 range
+    min_sim = similarities.min()
+    max_sim = similarities.max()
+    if max_sim > min_sim:
+        normalized = 0.1 + 0.85 * (similarities - min_sim) / (max_sim - min_sim)
+    else:
+        normalized = np.full_like(similarities, 0.5)
+
+    results = {}
+    for i, cid in enumerate(candidate_cids):
+        score = float(normalized[i])
+        results[cid] = {
+            "interest_match": score,
+            "career_relevance": max(0.1, score * 0.8),
+            "learning_style_fit": 0.5,
+        }
+
+    return results
+
+
+def fill_interest_from_embeddings(candidate_factors, interest_statement, courses_db):
+    """
+    Fill interest factors using embedding similarity instead of defaults.
+    Falls back to 0.5 defaults if embeddings are unavailable.
+
+    Args:
+        candidate_factors: dict from compute_candidate_factors
+        interest_statement: student's stated interests
+        courses_db: course database for descriptions
+
+    Returns:
+        dict {course_id: {factor_name: value}} with interest factors filled
+    """
+    candidate_ids = list(candidate_factors.keys())
+
+    interest_scores = None
+    if interest_statement:
+        interest_scores = compute_interest_scores(interest_statement, candidate_ids, courses_db)
+
+    filled = {}
+    for cid, data in candidate_factors.items():
+        if isinstance(data, dict) and "factors" in data:
+            factors = dict(data["factors"])
+        else:
+            factors = dict(data)
+
+        if interest_scores and cid in interest_scores:
+            scores = interest_scores[cid]
+            factors["interest_match"] = scores["interest_match"]
+            factors["career_relevance"] = scores["career_relevance"]
+            factors["learning_style_fit"] = scores["learning_style_fit"]
+        else:
+            for f in ["interest_match", "career_relevance", "learning_style_fit"]:
+                if factors.get(f) is None:
+                    factors[f] = 0.5
+
+        filled[cid] = factors
+    return filled
