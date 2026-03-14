@@ -73,6 +73,9 @@ except Exception as e:
 class SemesterPlan:
     """Tracks the state of an in-progress semester being built."""
 
+    PROFILE_NAMES = ["requirements_optimizer", "interest_explorer",
+                     "workload_balancer", "career_strategist", "balanced"]
+
     def __init__(self):
         self.active = False
         self.semester_type = None       # "fall" or "spring"
@@ -82,6 +85,11 @@ class SemesterPlan:
         self.stage = None               # "initiated", "gathering_prefs", "suggesting", "finalizing"
         self.feasible_candidates = []   # pre-vetted by Python
         self.scorer = CourseScorer(model="multidimensional") if _scoring_available else None
+        # Profile scores — running weights for each framework profile (sum to 1)
+        # Start equal; BOOST/REDUCE signals accumulate across turns
+        self.profile_scores = {p: 1.0 / len(self.PROFILE_NAMES)
+                               for p in self.PROFILE_NAMES}
+        self._active_profile = "balanced"
 
     def reset(self):
         self.__init__()
@@ -100,7 +108,36 @@ class SemesterPlan:
         if self.priority:
             parts.append(f"Priority: {self.priority}")
         parts.append(f"Stage: {self.stage}")
+        parts.append(f"Active profile: {self._active_profile}")
         return "\n".join(parts)
+
+    def apply_profile_signals(self, profile_signals):
+        """
+        Apply BOOST/REDUCE signals to profile scores and update active profile.
+        Uses same mechanism as dimension weights: multiply, renormalize.
+
+        Args:
+            profile_signals: dict {profile_name: "BOOST" | "REDUCE"}
+                             (profiles not mentioned are KEEP)
+        """
+        multipliers = {"BOOST": 2.0, "REDUCE": 0.5, "KEEP": 1.0}
+
+        for p in self.profile_scores:
+            signal = profile_signals.get(p, "KEEP")
+            self.profile_scores[p] *= multipliers.get(signal, 1.0)
+
+        # Renormalize to sum to 1
+        total = sum(self.profile_scores.values())
+        if total > 0:
+            self.profile_scores = {p: s / total for p, s in self.profile_scores.items()}
+
+        # Update active profile (argmax)
+        new_active = max(self.profile_scores, key=self.profile_scores.get)
+        if new_active != self._active_profile:
+            self._active_profile = new_active
+            # Apply the new profile's sub-weight overrides to the scorer
+            if self.scorer:
+                self.scorer.set_framework(new_active)
 
 
 class StudentProfile:
@@ -696,49 +733,80 @@ def get_feasible_candidates(profile):
 
 _SIGNAL_SYSTEM_PROMPT = """You are an MIT course advisor analyzing a student's message to understand their priorities.
 
-The course recommendation system has three dimensions:
+DIMENSION SIGNALS — The recommendation system has three dimensions. For each, output BOOST (student cares more), REDUCE (student cares less), or KEEP (no signal):
 - NECESSITY: graduation requirements, prerequisite chains, timeline pressure, CI-M needs
 - INTEREST: personal curiosity, career goals, topic preferences, learning style
 - FEASIBILITY: workload concerns, time constraints, course difficulty, ratings
 
-For each dimension, output BOOST (student cares more about this), REDUCE (student cares less), or KEEP (no signal).
+PROFILE SIGNALS — The system has five student profiles. For each, output BOOST (message matches this profile), REDUCE (message contradicts this profile), or KEEP (no signal):
+- requirements_optimizer: focused on graduating efficiently, knocking out requirements
+- interest_explorer: wants to take interesting courses, explore topics for curiosity
+- workload_balancer: prioritizing a manageable semester, avoiding overload
+- career_strategist: thinking about career or grad school goals, building toward a specific job
+- balanced: no single priority dominates, wants a reasonable mix
 
 Respond with EXACTLY this format, nothing else:
 necessity: [BOOST/REDUCE/KEEP]
 interest: [BOOST/REDUCE/KEEP]
-feasibility: [BOOST/REDUCE/KEEP]"""
+feasibility: [BOOST/REDUCE/KEEP]
+requirements_optimizer: [BOOST/REDUCE/KEEP]
+interest_explorer: [BOOST/REDUCE/KEEP]
+workload_balancer: [BOOST/REDUCE/KEEP]
+career_strategist: [BOOST/REDUCE/KEEP]
+balanced: [BOOST/REDUCE/KEEP]"""
+
+
+_PROFILE_NAMES = ["requirements_optimizer", "interest_explorer",
+                  "workload_balancer", "career_strategist", "balanced"]
 
 
 def _parse_llm_signals(response):
-    """Parse LLM signal detection response into signals dict."""
-    signals = {}
+    """Parse LLM signal detection response into dimension signals and profile signals."""
+    dim_signals = {}
+    profile_signals = {}
     for line in response.strip().split("\n"):
         line = line.strip().lower()
+
+        # Check dimensions
         for dim in ["necessity", "interest", "feasibility"]:
-            if dim in line:
+            if dim in line and dim not in ["interest_explorer"]:
+                # Avoid matching "interest" inside "interest_explorer"
+                # Only match if it's the dimension keyword at the start
+                if line.startswith(dim) or (dim + ":" in line and not any(p in line for p in _PROFILE_NAMES)):
+                    if "boost" in line:
+                        dim_signals[dim] = "BOOST"
+                    elif "reduce" in line:
+                        dim_signals[dim] = "REDUCE"
+                    break
+
+        # Check profiles
+        for profile in _PROFILE_NAMES:
+            if profile in line:
                 if "boost" in line:
-                    signals[dim] = "BOOST"
+                    profile_signals[profile] = "BOOST"
                 elif "reduce" in line:
-                    signals[dim] = "REDUCE"
-                # KEEP = no entry (matches detect_signals convention)
+                    profile_signals[profile] = "REDUCE"
                 break
-    return signals
+
+    return dim_signals, profile_signals
 
 
 def _llm_detect_signals(message, client):
     """
-    Use the LLM to detect dimension signals from a student message.
-    Falls back to regex detect_signals if the LLM call fails.
+    Use the LLM to detect dimension and profile signals from a student message.
+    Falls back to regex detect_signals (dimension only) if the LLM call fails.
 
     Args:
         message: student's message text
         client: HuggingFace InferenceClient instance
 
     Returns:
-        dict of {dimension: "BOOST" | "REDUCE"} for detected signals
+        (dim_signals, profile_signals) tuple of dicts
+        dim_signals: {dimension: "BOOST" | "REDUCE"}
+        profile_signals: {profile_name: "BOOST" | "REDUCE"}
     """
     if client is None:
-        return detect_signals(message)
+        return detect_signals(message), {}
 
     try:
         messages = [
@@ -747,15 +815,15 @@ def _llm_detect_signals(message, client):
         ]
         response = client.chat_completion(
             messages=messages,
-            max_tokens=60,
+            max_tokens=120,
             temperature=0.1,
         )
         raw = response.choices[0].message.content.strip()
-        signals = _parse_llm_signals(raw)
-        return signals
+        dim_signals, profile_signals = _parse_llm_signals(raw)
+        return dim_signals, profile_signals
     except Exception:
-        # Fall back to regex on any LLM failure
-        return detect_signals(message)
+        # Fall back to regex on any LLM failure (dimension only, no profile)
+        return detect_signals(message), {}
 
 
 def build_semester_context(profile, stage_override=None, llm_client=None):
@@ -820,9 +888,15 @@ def build_semester_context(profile, stage_override=None, llm_client=None):
             # Apply signals from the student's priority statement
             # Use LLM-based detection if client available, fall back to regex
             if plan.priority:
-                signals = _llm_detect_signals(plan.priority, llm_client) if llm_client else detect_signals(plan.priority)
-                if signals:
-                    plan.scorer.apply_signal(signals)
+                if llm_client:
+                    dim_signals, profile_signals = _llm_detect_signals(plan.priority, llm_client)
+                else:
+                    dim_signals = detect_signals(plan.priority)
+                    profile_signals = {}
+                if dim_signals:
+                    plan.scorer.apply_signal(dim_signals)
+                if profile_signals:
+                    plan.apply_profile_signals(profile_signals)
 
             # Score candidates
             raw_factors = compute_candidate_factors(candidates, profile.max_units, plan.planned_units)
@@ -831,7 +905,10 @@ def build_semester_context(profile, stage_override=None, llm_client=None):
 
             state = plan.scorer.get_state()
             w = state["dim_weights"]
-            parts.append(f"CURRENT WEIGHTS: necessity={w['necessity']:.2f}, interest={w['interest']:.2f}, feasibility={w['feasibility']:.2f}\n")
+            parts.append(f"CURRENT WEIGHTS: necessity={w['necessity']:.2f}, interest={w['interest']:.2f}, feasibility={w['feasibility']:.2f}")
+            parts.append(f"ACTIVE PROFILE: {plan._active_profile}")
+            ps = plan.profile_scores
+            parts.append(f"PROFILE SCORES: {', '.join(f'{p}={s:.2f}' for p, s in sorted(ps.items(), key=lambda x: -x[1]))}\n")
 
             parts.append(f"RANKED SCORECARD ({len(ranked)} courses, all prereqs met, no schedule conflicts):\n")
             for rank, (cid, score, details) in enumerate(ranked, 1):
@@ -1078,11 +1155,14 @@ class Chatbot:
             msg_lower = user_input.lower()
 
             # Apply LLM signal detection on every message during planning
-            # This accumulates BOOST/REDUCE signals across turns
+            # This accumulates BOOST/REDUCE signals across turns for both
+            # dimension weights and profile scores
             if plan.scorer and _scoring_available:
-                signals = _llm_detect_signals(user_input, self.client)
-                if signals:
-                    plan.scorer.apply_signal(signals)
+                dim_signals, profile_signals = _llm_detect_signals(user_input, self.client)
+                if dim_signals:
+                    plan.scorer.apply_signal(dim_signals)
+                if profile_signals:
+                    plan.apply_profile_signals(profile_signals)
 
             # Check if student is adding a course by mentioning course IDs
             course_ids = re.findall(r'\b(\d{1,2}\.\w{2,5})\b', user_input)
