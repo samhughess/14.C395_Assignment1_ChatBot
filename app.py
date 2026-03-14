@@ -59,7 +59,6 @@ def update_profile(major, courses, year, semesters):
 
 
 # ─── Build Gradio interface ─────────────────────────────────
-
 def create_chatbot():
     """Create and configure the full Gradio app."""
 

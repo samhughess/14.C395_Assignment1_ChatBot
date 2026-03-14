@@ -58,6 +58,15 @@ except Exception as e:
     print(f"[chat.py] Warning: Scheduler not loaded: {e}")
     _scheduler = None
 
+try:
+    from scoring import (CourseScorer, compute_candidate_factors, fill_interest_defaults,
+                         detect_signals, apply_signals, DEFAULT_DIM_WEIGHTS,
+                         FRAMEWORK_PROFILES)
+    _scoring_available = True
+except Exception as e:
+    print(f"[chat.py] Warning: scoring module not loaded: {e}")
+    _scoring_available = False
+
 
 # ─── Student Profile ────────────────────────────────────────
 
@@ -72,6 +81,7 @@ class SemesterPlan:
         self.priority = None            # student's stated priority/interests
         self.stage = None               # "initiated", "gathering_prefs", "suggesting", "finalizing"
         self.feasible_candidates = []   # pre-vetted by Python
+        self.scorer = CourseScorer(model="multidimensional") if _scoring_available else None
 
     def reset(self):
         self.__init__()
@@ -540,17 +550,16 @@ def execute_scheduling(course_ids):
 def get_feasible_candidates(profile):
     """
     Get all feasible candidate courses scored across strategic dimensions.
-    Python computes the factual scores; the LLM uses them + student preferences
-    to make final recommendations.
+    Python computes the factual scores; the scoring module ranks them;
+    the LLM uses the ranked list + student preferences to make final recommendations.
 
     Dimensions scored:
       - critical_path: does this unlock future courses? (HIGH/MEDIUM/NONE)
       - scarcity: offering frequency (FALL_ONLY/SPRING_ONLY/BOTH)
       - efficiency: does it double-count across requirements? (DOUBLE_COUNTS/SINGLE)
       - ci_m_value: does student still need CI-M? (NEEDED/NOT_NEEDED)
-      - timeline_pressure: how tight is the student's remaining schedule? (HIGH/MEDIUM/LOW)
       - rating: student rating from FireRoad (numeric or None)
-      - units: course weight (numeric)
+      - workload: in-class + out-of-class hours
     """
     import io, contextlib
 
@@ -604,18 +613,6 @@ def get_feasible_candidates(profile):
     # CI-M need
     ci_m_status = status["major_status"]["ci_m"]
     student_needs_ci_m = not ci_m_status["done"]
-
-    # Timeline pressure
-    semesters_left = profile.semesters_left or 4
-    remaining_groups = sum(1 for g in status["major_status"]["select_groups"] if not g["done"])
-    remaining_required = len(status["major_status"]["required_courses"]["remaining"])
-    total_remaining = remaining_groups + remaining_required
-    if semesters_left <= 2 and total_remaining > 4:
-        timeline_pressure = "HIGH"
-    elif semesters_left <= 3 and total_remaining > 6:
-        timeline_pressure = "MEDIUM"
-    else:
-        timeline_pressure = "LOW"
 
     # Check conflicts with planned courses
     can_check_conflicts = (_scheduler and plan.planned_courses and
@@ -686,7 +683,6 @@ def get_feasible_candidates(profile):
             "efficiency": efficiency,
             "efficiency_detail": efficiency_detail,
             "ci_m_value": ci_m_value,
-            "timeline_pressure": timeline_pressure,
             "rating": course.get("rating"),
             "in_class_hours": course.get("in_class_hours"),
             "out_of_class_hours": course.get("out_of_class_hours"),
@@ -696,11 +692,80 @@ def get_feasible_candidates(profile):
     return enriched
 
 
-def build_semester_context(profile, stage_override=None):
+# ─── LLM Signal Detection ───────────────────────────────────
+
+_SIGNAL_SYSTEM_PROMPT = """You are an MIT course advisor analyzing a student's message to understand their priorities.
+
+The course recommendation system has three dimensions:
+- NECESSITY: graduation requirements, prerequisite chains, timeline pressure, CI-M needs
+- INTEREST: personal curiosity, career goals, topic preferences, learning style
+- FEASIBILITY: workload concerns, time constraints, course difficulty, ratings
+
+For each dimension, output BOOST (student cares more about this), REDUCE (student cares less), or KEEP (no signal).
+
+Respond with EXACTLY this format, nothing else:
+necessity: [BOOST/REDUCE/KEEP]
+interest: [BOOST/REDUCE/KEEP]
+feasibility: [BOOST/REDUCE/KEEP]"""
+
+
+def _parse_llm_signals(response):
+    """Parse LLM signal detection response into signals dict."""
+    signals = {}
+    for line in response.strip().split("\n"):
+        line = line.strip().lower()
+        for dim in ["necessity", "interest", "feasibility"]:
+            if dim in line:
+                if "boost" in line:
+                    signals[dim] = "BOOST"
+                elif "reduce" in line:
+                    signals[dim] = "REDUCE"
+                # KEEP = no entry (matches detect_signals convention)
+                break
+    return signals
+
+
+def _llm_detect_signals(message, client):
+    """
+    Use the LLM to detect dimension signals from a student message.
+    Falls back to regex detect_signals if the LLM call fails.
+
+    Args:
+        message: student's message text
+        client: HuggingFace InferenceClient instance
+
+    Returns:
+        dict of {dimension: "BOOST" | "REDUCE"} for detected signals
+    """
+    if client is None:
+        return detect_signals(message)
+
+    try:
+        messages = [
+            {"role": "system", "content": _SIGNAL_SYSTEM_PROMPT},
+            {"role": "user", "content": f'Student message: "{message}"'},
+        ]
+        response = client.chat_completion(
+            messages=messages,
+            max_tokens=60,
+            temperature=0.1,
+        )
+        raw = response.choices[0].message.content.strip()
+        signals = _parse_llm_signals(raw)
+        return signals
+    except Exception:
+        # Fall back to regex on any LLM failure
+        return detect_signals(message)
+
+
+def build_semester_context(profile, stage_override=None, llm_client=None):
     """
     Build the full context string for the semester planning conversation.
     This gets injected into the LLM prompt. Python provides the facts,
     LLM provides the judgment about interests and recommendations.
+
+    If llm_client is provided, uses LLM-based signal detection (preferred).
+    Otherwise falls back to regex-based detect_signals.
     """
     plan = profile.semester_plan
     stage = stage_override or plan.stage
@@ -740,47 +805,67 @@ def build_semester_context(profile, stage_override=None):
 
     elif stage == "gathering_prefs":
         parts.append(f"\nINSTRUCTIONS: The student stated their priorities. Now recommend courses.")
-        parts.append("Below is a SCORECARD of feasible candidates with strategic scores across multiple dimensions.")
+        parts.append("Below is a RANKED SCORECARD of feasible candidates, scored by our decision model.")
+        parts.append("Courses are ranked by a weighted combination of necessity, interest, and feasibility factors.")
         parts.append("Use ONLY these candidates. Do NOT suggest any other courses.")
-        parts.append("Consider the student's stated priorities AND the strategic scores to pick 3-5 best options.")
-        parts.append("For each recommendation, explain WHY it's a good fit — reference both the student's interests")
-        parts.append("and the strategic factors (e.g., 'this is fall-only so take it now' or 'this unlocks 2 future courses').")
-        parts.append("If a student's interest conflicts with strategic urgency, note the tradeoff and let them decide.")
+        parts.append("Recommend the top 3-5 courses. For each, explain WHY using the dimensional scores")
+        parts.append("(e.g., 'high necessity because it unlocks future courses' or 'strong interest match').")
+        parts.append("If a student's interest conflicts with strategic urgency, note the tradeoff.")
         parts.append("Ask which one(s) they'd like to add.\n")
 
         candidates = get_feasible_candidates(profile)
         plan.feasible_candidates = candidates
 
-        if candidates:
-            parts.append(f"CANDIDATE SCORECARD ({len(candidates)} courses, all prereqs met, no schedule conflicts):")
-            parts.append(f"Timeline pressure for this student: {candidates[0]['timeline_pressure'] if candidates else 'LOW'}\n")
-            for c in candidates:
-                parts.append(f"  {c['course_id']} — {c['title']} ({c['units']}u)")
-                parts.append(f"    Requirement: {c['requirement_filled']}")
+        if candidates and _scoring_available and plan.scorer:
+            # Apply signals from the student's priority statement
+            # Use LLM-based detection if client available, fall back to regex
+            if plan.priority:
+                signals = _llm_detect_signals(plan.priority, llm_client) if llm_client else detect_signals(plan.priority)
+                if signals:
+                    plan.scorer.apply_signal(signals)
 
-                # Strategic tags
+            # Score candidates
+            raw_factors = compute_candidate_factors(candidates, profile.max_units, plan.planned_units)
+            filled = fill_interest_defaults(raw_factors)
+            ranked = plan.scorer.score_candidates(filled)
+
+            state = plan.scorer.get_state()
+            w = state["dim_weights"]
+            parts.append(f"CURRENT WEIGHTS: necessity={w['necessity']:.2f}, interest={w['interest']:.2f}, feasibility={w['feasibility']:.2f}\n")
+
+            parts.append(f"RANKED SCORECARD ({len(ranked)} courses, all prereqs met, no schedule conflicts):\n")
+            for rank, (cid, score, details) in enumerate(ranked, 1):
+                c = next((x for x in candidates if x["course_id"] == cid), {})
+                ds = details.get("dim_scores", {})
+                parts.append(f"  #{rank}  {cid} — {c.get('title', '?')} ({c.get('units', '?')}u)  SCORE: {score:.3f}")
+                parts.append(f"    Requirement: {c.get('requirement_filled', '?')}")
+                parts.append(f"    Necessity: {ds.get('necessity', 0):.2f}  Interest: {ds.get('interest', 0):.2f}  Feasibility: {ds.get('feasibility', 0):.2f}")
+
+                # Key tags for LLM context
                 tags = []
-                if c["critical_path"] != "NONE":
-                    tags.append(f"Critical path: {c['critical_path']} ({c['critical_detail']})")
-                if c["scarcity"] not in ("both", "unknown"):
-                    tags.append(f"Scarcity: {c['scarcity'].upper().replace('_', ' ')} — take now or wait a year")
-                if c["efficiency"] == "DOUBLE_COUNTS":
-                    tags.append(f"Efficiency: {c['efficiency_detail']}")
-                if c["ci_m_value"] == "NEEDED":
-                    tags.append("CI-M: student still needs this — counts toward CI-M requirement")
+                if c.get("critical_path", "NONE") != "NONE":
+                    tags.append(f"Critical path: {c['critical_path']} ({c.get('critical_detail', '')})")
+                if c.get("scarcity") not in ("both", "unknown", None):
+                    tags.append(f"{c['scarcity'].replace('_', ' ').title()} — take now or wait a year")
+                if c.get("efficiency") == "DOUBLE_COUNTS":
+                    tags.append(f"Double-counts: {c.get('efficiency_detail', '')}")
+                if c.get("ci_m_value") == "NEEDED":
+                    tags.append("CI-M needed")
                 if c.get("rating"):
-                    tags.append(f"Rating: {c['rating']}/5")
+                    tags.append(f"Rating: {c['rating']:.1f}/7")
                 if c.get("in_class_hours") and c.get("out_of_class_hours"):
                     total_hrs = (c["in_class_hours"] or 0) + (c["out_of_class_hours"] or 0)
                     tags.append(f"Workload: ~{total_hrs:.0f} hrs/week")
-
-                if tags:
-                    for tag in tags:
-                        parts.append(f"    • {tag}")
-                else:
-                    parts.append(f"    • No special strategic flags")
-
-                parts.append(f"    Description: {c['description']}")
+                for tag in tags:
+                    parts.append(f"    • {tag}")
+                parts.append(f"    Description: {c.get('description', '')[:200]}")
+                parts.append("")
+        elif candidates:
+            # Fallback: show candidates without scoring
+            parts.append(f"CANDIDATE LIST ({len(candidates)} courses):\n")
+            for c in candidates:
+                parts.append(f"  {c['course_id']} — {c['title']} ({c['units']}u) — {c['requirement_filled']}")
+                parts.append(f"    Description: {c['description'][:200]}")
                 parts.append("")
         else:
             parts.append("No additional feasible candidates found.")
@@ -981,7 +1066,7 @@ class Chatbot:
                         plan.add_course(cid, course.get("total_units", 12))
 
                 # Build context for LLM
-                tool_context = build_semester_context(self.profile)
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
 
                 # Advance stage for next turn
                 if plan.stage == "initiated":
@@ -991,6 +1076,13 @@ class Chatbot:
         elif self.profile.semester_plan.active:
             plan = self.profile.semester_plan
             msg_lower = user_input.lower()
+
+            # Apply LLM signal detection on every message during planning
+            # This accumulates BOOST/REDUCE signals across turns
+            if plan.scorer and _scoring_available:
+                signals = _llm_detect_signals(user_input, self.client)
+                if signals:
+                    plan.scorer.apply_signal(signals)
 
             # Check if student is adding a course by mentioning course IDs
             course_ids = re.findall(r'\b(\d{1,2}\.\w{2,5})\b', user_input)
@@ -1003,22 +1095,22 @@ class Chatbot:
                     if course:
                         plan.add_course(cid, course.get("total_units", 12))
                 plan.stage = "suggesting"
-                tool_context = build_semester_context(self.profile)
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
 
             elif plan.stage == "gathering_prefs":
                 # Student stated their preferences — save and move to suggesting
                 plan.priority = user_input
                 plan.stage = "gathering_prefs"  # stays here — build_semester_context uses this to show candidates
-                tool_context = build_semester_context(self.profile)
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
 
             elif any(kw in msg_lower for kw in ["done", "looks good", "that's it", "happy with",
                                                   "finalize", "good semester", "all set"]):
                 plan.stage = "finalizing"
-                tool_context = build_semester_context(self.profile)
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
 
             else:
                 # General follow-up during planning — show current state + candidates
-                tool_context = build_semester_context(self.profile)
+                tool_context = build_semester_context(self.profile, llm_client=self.client)
 
         elif intent == Intent.PROFILE_UPDATE:
             if self.profile.is_complete():
