@@ -381,6 +381,8 @@ def _parse_course_list(text):
 
 class Intent:
     COURSE_LOOKUP = "course_lookup"
+    COMPARISON = "comparison"
+    RECOMMENDATION = "recommendation"
     REQUIREMENTS = "requirements"
     SCHEDULING = "scheduling"
     PLANNING = "planning"
@@ -411,10 +413,31 @@ def detect_intent(message):
     profile_keywords = ["i'm a", "i am a", "my major", "i've taken",
                         "i have taken", "my courses", "i'm in course"]
 
+    compare_keywords = ["compare", "versus", " vs ", " or ", "between",
+                        "difference between", "which is better", "which one",
+                        "choose between", "deciding between", "pick between",
+                        "instead of", "rather than"]
+
+    recommend_keywords = ["similar to", "like ", "courses like", "something like",
+                          "alternative to", "alternatives to", "instead of",
+                          "go deeper", "deeper into", "follow up", "follow-up",
+                          "follow on", "follow-on", "build on", "builds on",
+                          "after taking", "after finishing", "finished",
+                          "enjoyed", "loved", "more like", "what next after",
+                          "similar courses", "related to", "related courses"]
+
     if any(kw in msg_lower for kw in profile_keywords):
         return Intent.PROFILE_UPDATE, {"course_ids": valid_ids}
     if any(kw in msg_lower for kw in req_keywords):
         return Intent.REQUIREMENTS, {"course_ids": valid_ids}
+
+    # Comparison: exactly 2 valid courses + comparison language (or just 2 courses with "or")
+    if len(valid_ids) == 2 and any(kw in msg_lower for kw in compare_keywords):
+        return Intent.COMPARISON, {"course_ids": valid_ids}
+
+    # Recommendation: 1 anchor course + recommendation language
+    if len(valid_ids) == 1 and any(kw in msg_lower for kw in recommend_keywords):
+        return Intent.RECOMMENDATION, {"course_ids": valid_ids}
 
     # Semester build: student mentions specific courses + asking for suggestions
     # Also triggers if student mentions courses + planning keywords (they have courses in mind)
@@ -595,6 +618,434 @@ def execute_scheduling(course_ids):
         parts.append("Try dropping one course or look for alternative sections.")
 
     return {"summary": "\n".join(parts)}
+
+
+def execute_comparison(course_ids, profile):
+    """
+    Compare two courses by computing key differentiators.
+
+    Following the design from the planning notebook (Section 4):
+    - Compute standard metrics for each course
+    - Identify dimensions where they meaningfully differ (differentiators)
+    - Rank differentiators by impact (prereq blockage > term exclusivity > workload > rating > critical path)
+    - Build context that highlights the top differentiator for the LLM to center the conversation on
+
+    Returns dict with comparison data and LLM instructions.
+    """
+    if len(course_ids) < 2:
+        return {"error": "Need exactly 2 courses to compare."}
+
+    cid_a, cid_b = course_ids[0], course_ids[1]
+    course_a = COURSES.get(cid_a, {})
+    course_b = COURSES.get(cid_b, {})
+
+    if not course_a:
+        return {"error": f"Course {cid_a} not found in catalog."}
+    if not course_b:
+        return {"error": f"Course {cid_b} not found in catalog."}
+
+    # ── Compute metrics for each course ──
+    def _course_metrics(cid, course):
+        metrics = {
+            "subject_id": cid,
+            "title": course.get("title", "Unknown"),
+            "units": course.get("total_units", 12),
+            "in_class_hours": course.get("in_class_hours") or 0,
+            "out_of_class_hours": course.get("out_of_class_hours") or 0,
+            "rating": course.get("rating"),
+            "offered_fall": course.get("offered_fall", False),
+            "offered_spring": course.get("offered_spring", False),
+            "description": course.get("description", "No description.")[:400],
+            "instructors": course.get("instructors", []),
+            "gir_attribute": course.get("gir_attribute"),
+            "hass_attribute": course.get("hass_attribute"),
+            "communication_requirement": course.get("communication_requirement"),
+        }
+        metrics["total_hours"] = metrics["in_class_hours"] + metrics["out_of_class_hours"]
+
+        # Offering frequency
+        if metrics["offered_fall"] and metrics["offered_spring"]:
+            metrics["frequency"] = "both semesters"
+        elif metrics["offered_fall"]:
+            metrics["frequency"] = "fall only"
+        elif metrics["offered_spring"]:
+            metrics["frequency"] = "spring only"
+        else:
+            metrics["frequency"] = "unknown"
+
+        # Prereq status (if student profile available)
+        metrics["prereqs_met"] = True
+        metrics["missing_prereqs"] = []
+        if _tracker and profile and profile.courses_taken:
+            sat, missing = _tracker.check_prereqs_satisfied(cid, profile.courses_taken)
+            metrics["prereqs_met"] = sat
+            metrics["missing_prereqs"] = missing
+
+        # Downstream courses unlocked (critical path impact)
+        metrics["downstream_count"] = 0
+        if _planner and profile and profile.major_id:
+            try:
+                paths = _planner.find_critical_paths(profile.major_id, profile.courses_taken)
+                for path in paths:
+                    if cid in path:
+                        idx = path.index(cid)
+                        metrics["downstream_count"] = max(
+                            metrics["downstream_count"], len(path) - idx - 1
+                        )
+            except Exception:
+                pass
+
+        return metrics
+
+    ma = _course_metrics(cid_a, course_a)
+    mb = _course_metrics(cid_b, course_b)
+
+    # ── Identify differentiators ──
+    # Each differentiator: (impact_rank, name, description)
+    # Lower rank = higher impact. Only include dimensions where courses meaningfully differ.
+    differentiators = []
+
+    # 1. Prerequisite blockage (highest impact — constrains what student can actually do)
+    if ma["prereqs_met"] != mb["prereqs_met"]:
+        blocked = cid_a if not ma["prereqs_met"] else cid_b
+        available = cid_b if blocked == cid_a else cid_a
+        blocked_missing = ma["missing_prereqs"] if blocked == cid_a else mb["missing_prereqs"]
+        differentiators.append((1, "prerequisite_status",
+            f"{blocked} has unmet prerequisites ({', '.join(blocked_missing)}), "
+            f"while {available} is available now. This is a hard constraint."))
+
+    # 2. Term exclusivity (constrains timing)
+    if ma["frequency"] != mb["frequency"]:
+        if "only" in ma["frequency"] or "only" in mb["frequency"]:
+            differentiators.append((2, "term_availability",
+                f"{cid_a} is offered {ma['frequency']}; "
+                f"{cid_b} is offered {mb['frequency']}. "
+                f"A course offered only once per year should be prioritized when available."))
+
+    # 3. Workload gap (>3 hrs/wk difference is meaningful)
+    hrs_diff = abs(ma["total_hours"] - mb["total_hours"])
+    if hrs_diff >= 3:
+        lighter = cid_a if ma["total_hours"] < mb["total_hours"] else cid_b
+        heavier = cid_b if lighter == cid_a else cid_a
+        lighter_hrs = min(ma["total_hours"], mb["total_hours"])
+        heavier_hrs = max(ma["total_hours"], mb["total_hours"])
+        differentiators.append((3, "workload",
+            f"{heavier} is significantly heavier (~{heavier_hrs:.0f} hrs/wk) "
+            f"compared to {lighter} (~{lighter_hrs:.0f} hrs/wk). "
+            f"A {hrs_diff:.0f} hr/wk gap matters for semester balance."))
+
+    # 4. Rating difference (>0.5 points on 7-point scale)
+    if ma["rating"] is not None and mb["rating"] is not None:
+        rating_diff = abs(ma["rating"] - mb["rating"])
+        if rating_diff >= 0.5:
+            higher = cid_a if ma["rating"] > mb["rating"] else cid_b
+            lower = cid_b if higher == cid_a else cid_a
+            differentiators.append((4, "student_rating",
+                f"{higher} is rated higher ({max(ma['rating'], mb['rating']):.1f}/7) "
+                f"vs {lower} ({min(ma['rating'], mb['rating']):.1f}/7)."))
+
+    # 5. Critical path impact (downstream courses unlocked)
+    if ma["downstream_count"] != mb["downstream_count"]:
+        more_unlock = cid_a if ma["downstream_count"] > mb["downstream_count"] else cid_b
+        fewer_unlock = cid_b if more_unlock == cid_a else cid_a
+        more_count = max(ma["downstream_count"], mb["downstream_count"])
+        fewer_count = min(ma["downstream_count"], mb["downstream_count"])
+        if more_count > 0:
+            differentiators.append((5, "critical_path",
+                f"{more_unlock} unlocks {more_count} downstream course(s), "
+                f"while {fewer_unlock} unlocks {fewer_count}. "
+                f"Taking {more_unlock} first keeps more options open."))
+
+    # 6. Units difference
+    if ma["units"] != mb["units"]:
+        differentiators.append((6, "units",
+            f"{cid_a} is {ma['units']} units; {cid_b} is {mb['units']} units."))
+
+    # Sort by impact rank
+    differentiators.sort(key=lambda x: x[0])
+
+    # ── Build context string ──
+    parts = []
+    parts.append(f"COURSE COMPARISON: {cid_a} vs {cid_b}\n")
+
+    # Side-by-side metrics
+    parts.append(f"  {cid_a} — {ma['title']}")
+    parts.append(f"    Units: {ma['units']}  |  Hours/wk: ~{ma['total_hours']:.0f}  |  "
+                 f"Rating: {ma['rating']:.1f}/7" if ma['rating'] else
+                 f"    Units: {ma['units']}  |  Hours/wk: ~{ma['total_hours']:.0f}  |  Rating: N/A")
+    parts.append(f"    Offered: {ma['frequency']}  |  "
+                 f"Prereqs met: {'Yes' if ma['prereqs_met'] else 'No (' + ', '.join(ma['missing_prereqs']) + ')'}")
+    if ma["downstream_count"] > 0:
+        parts.append(f"    Unlocks {ma['downstream_count']} downstream course(s)")
+    tags_a = []
+    if ma["gir_attribute"]:
+        tags_a.append(ma["gir_attribute"])
+    if ma["hass_attribute"]:
+        tags_a.append(ma["hass_attribute"])
+    if ma["communication_requirement"]:
+        tags_a.append(ma["communication_requirement"])
+    if tags_a:
+        parts.append(f"    Attributes: {', '.join(tags_a)}")
+    parts.append(f"    Description: {ma['description']}")
+    parts.append("")
+
+    parts.append(f"  {cid_b} — {mb['title']}")
+    parts.append(f"    Units: {mb['units']}  |  Hours/wk: ~{mb['total_hours']:.0f}  |  "
+                 f"Rating: {mb['rating']:.1f}/7" if mb['rating'] else
+                 f"    Units: {mb['units']}  |  Hours/wk: ~{mb['total_hours']:.0f}  |  Rating: N/A")
+    parts.append(f"    Offered: {mb['frequency']}  |  "
+                 f"Prereqs met: {'Yes' if mb['prereqs_met'] else 'No (' + ', '.join(mb['missing_prereqs']) + ')'}")
+    if mb["downstream_count"] > 0:
+        parts.append(f"    Unlocks {mb['downstream_count']} downstream course(s)")
+    tags_b = []
+    if mb["gir_attribute"]:
+        tags_b.append(mb["gir_attribute"])
+    if mb["hass_attribute"]:
+        tags_b.append(mb["hass_attribute"])
+    if mb["communication_requirement"]:
+        tags_b.append(mb["communication_requirement"])
+    if tags_b:
+        parts.append(f"    Attributes: {', '.join(tags_b)}")
+    parts.append(f"    Description: {mb['description']}")
+    parts.append("")
+
+    # Key differentiators
+    if differentiators:
+        parts.append(f"KEY DIFFERENTIATORS (ranked by impact):")
+        for rank, name, desc in differentiators:
+            parts.append(f"  {rank}. [{name}] {desc}")
+        parts.append("")
+        top_diff = differentiators[0]
+        parts.append(f"TOP DIFFERENTIATOR: {top_diff[2]}")
+    else:
+        parts.append("These courses are similar across all measured dimensions (units, workload, rating, availability, prerequisites).")
+    parts.append("")
+
+    # Shared properties (not differentiators — don't focus on these)
+    shared = []
+    if ma["frequency"] == mb["frequency"]:
+        shared.append(f"Both offered {ma['frequency']}")
+    if ma["prereqs_met"] == mb["prereqs_met"]:
+        shared.append(f"Both {'available' if ma['prereqs_met'] else 'blocked by prereqs'}")
+    if abs(ma["total_hours"] - mb["total_hours"]) < 3:
+        shared.append(f"Similar workload (~{ma['total_hours']:.0f} vs ~{mb['total_hours']:.0f} hrs/wk)")
+    if shared:
+        parts.append(f"SHARED (not differentiators): {'; '.join(shared)}")
+        parts.append("")
+
+    # LLM instructions
+    parts.append("INSTRUCTIONS:")
+    parts.append("1. Present the side-by-side metrics clearly.")
+    parts.append("2. Highlight the TOP DIFFERENTIATOR in a single sentence — make it the focal point.")
+    parts.append("3. Do NOT recommend which course is better yet. Instead, end with TWO questions:")
+    parts.append("   a) A targeted question about the top differentiator (e.g., 'Is workload a concern this semester?')")
+    parts.append("   b) A framing question: 'Are you choosing one of these, or planning to take both at some point?'")
+    parts.append("      This matters because choosing one = selection problem, taking both = ordering problem.")
+    parts.append("4. Do NOT add generic advice. Do NOT suggest other courses. Focus only on these two.")
+
+    return {"summary": "\n".join(parts), "metrics_a": ma, "metrics_b": mb,
+            "differentiators": differentiators}
+
+
+# ─── Course Recommendation ──────────────────────────────────
+
+def _get_recommendation_embeddings():
+    """
+    Get embeddings for recommendation. Reuses the scoring module's
+    cached embeddings if available, otherwise computes them.
+    Returns (cid_list, embedding_matrix, cid_to_idx) or (None, None, None).
+    """
+    try:
+        from scoring import _get_embed_model, _get_course_embeddings
+        model = _get_embed_model()
+        if model is None:
+            return None, None, None
+        cid_list, embed_matrix = _get_course_embeddings(COURSES)
+        if cid_list is None:
+            return None, None, None
+        cid_to_idx = {cid: i for i, cid in enumerate(cid_list)}
+        return cid_list, embed_matrix, cid_to_idx
+    except Exception as e:
+        print(f"[chat.py] Warning: recommendation embeddings not available: {e}")
+        return None, None, None
+
+
+def _get_downstream_courses(anchor_cid):
+    """Find all courses that list anchor_cid in their prerequisites."""
+    downstream = []
+    for cid, course in COURSES.items():
+        prereq_str = course.get("prerequisites", "")
+        if prereq_str and anchor_cid in prereq_str:
+            downstream.append(cid)
+    return downstream
+
+
+def _check_prereqs_met(cid, courses_taken):
+    """Check if a course's prereqs are satisfied. Returns (met: bool, missing: list)."""
+    if _tracker:
+        return _tracker.check_prereqs_satisfied(cid, courses_taken)
+    # Fallback: simple prereq extraction
+    course = COURSES.get(cid, {})
+    prereq_str = course.get("prerequisites", "")
+    if not prereq_str or prereq_str.lower() == "none":
+        return True, []
+    mentioned = set(re.findall(r'([\d]+\.[\w.]+)', prereq_str))
+    taken_set = set(courses_taken)
+    missing = mentioned - taken_set
+    return len(missing) == 0, list(missing)
+
+
+def execute_recommendation(anchor_cid, profile):
+    """
+    Recommend courses similar to an anchor course.
+
+    Implements the two-scenario model from the course recommendation notebook:
+    - Scenario 1 (Alternatives): anchor NOT in student's transcript → find similar courses
+    - Scenario 2 (Follow-ons): anchor IN student's transcript → find courses that build on it
+
+    Each scenario uses sentence embeddings (all-MiniLM-L6-v2) for semantic similarity,
+    plus prereq graph analysis for follow-ons.
+
+    Returns dict with summary string for LLM context injection.
+    """
+    course = COURSES.get(anchor_cid)
+    if not course:
+        return {"error": f"Course {anchor_cid} not found in catalog."}
+
+    anchor_title = course.get("title", "Unknown")
+    courses_taken = profile.courses_taken if profile else []
+    taken_set = set(courses_taken)
+
+    # Scenario detection: has the student taken this course?
+    is_followon = anchor_cid in taken_set
+
+    # Get embeddings
+    cid_list, embed_matrix, cid_to_idx = _get_recommendation_embeddings()
+    if cid_list is None:
+        return {"error": "Course similarity model not available (sentence-transformers not installed)."}
+
+    if anchor_cid not in cid_to_idx:
+        return {"error": f"No description embedding available for {anchor_cid}."}
+
+    # Compute similarities
+    from sklearn.metrics.pairwise import cosine_similarity
+    anchor_idx = cid_to_idx[anchor_cid]
+    sims = cosine_similarity(embed_matrix[anchor_idx:anchor_idx+1], embed_matrix)[0]
+
+    # For follow-ons: find downstream courses (list anchor as prereq)
+    downstream_set = set()
+    if is_followon:
+        downstream_set = set(_get_downstream_courses(anchor_cid))
+
+    # Score and partition all courses
+    DOWNSTREAM_BONUS = 0.2
+    takeable = []
+    blocked = []
+
+    for i, sim_score in enumerate(sims):
+        cid = cid_list[i]
+        if cid == anchor_cid or cid in taken_set:
+            continue
+
+        is_ds = cid in downstream_set
+        combined = float(sim_score) + (DOWNSTREAM_BONUS if is_ds else 0.0)
+
+        met, missing = _check_prereqs_met(cid, courses_taken)
+        hours = _get_course_hours(cid)
+        c = COURSES.get(cid, {})
+
+        entry = {
+            "cid": cid,
+            "title": c.get("title", "Unknown"),
+            "units": c.get("total_units", 12),
+            "hours": hours,
+            "similarity": float(sim_score),
+            "combined": combined,
+            "is_downstream": is_ds,
+            "prereqs_met": met,
+            "missing_prereqs": missing,
+            "description": c.get("description", "")[:250],
+        }
+
+        if met:
+            takeable.append(entry)
+        else:
+            blocked.append(entry)
+
+    # Sort by combined score
+    takeable.sort(key=lambda x: x["combined"], reverse=True)
+    blocked.sort(key=lambda x: x["combined"], reverse=True)
+
+    # Deduplicate by title (e.g. 6.4210 and 6.4212 both "Robotic Manipulation")
+    seen_titles = set()
+    deduped_takeable = []
+    for entry in takeable:
+        if entry["title"] not in seen_titles:
+            deduped_takeable.append(entry)
+            seen_titles.add(entry["title"])
+    takeable = deduped_takeable[:7]
+    blocked = blocked[:3]
+
+    # ── Build context string ──
+    parts = []
+
+    if is_followon:
+        # Scenario 2: Follow-ons
+        parts.append(f"FOLLOW-ON COURSES FROM {anchor_cid} — {anchor_title}")
+        parts.append(f"The student has already taken {anchor_cid} and wants to go deeper.")
+        parts.append("")
+        parts.append("INSTRUCTIONS:")
+        parts.append(f"- Split results into 'Courses that build directly on {anchor_cid}' (marked below)")
+        parts.append("  and 'Related courses in the same area'.")
+        parts.append(f"- For each course, write ONE sentence explaining what it adds beyond {anchor_cid}.")
+        parts.append("  Use the description — don't just say 'related to the topic'.")
+        parts.append("- Show hours/week where available. If hours are 0 or missing, omit the field entirely.")
+        parts.append("- Mention blocked courses briefly as future goals with their missing prereqs.")
+        parts.append("- End with: 'Are you more interested in the theoretical side, applied/project-based")
+        parts.append("  work, or a specific application area (robotics, NLP, etc.)?'")
+        parts.append("- Do NOT suggest courses not in the lists below.")
+        parts.append("")
+        parts.append("RECOMMENDED COURSES (prereqs met):\n")
+
+        for e in takeable:
+            hrs_str = f", ~{e['hours']:.0f} hrs/wk" if e["hours"] > 0 else ""
+            tag = f"  ** Builds directly on {anchor_cid} **" if e["is_downstream"] else ""
+            parts.append(f"  {e['cid']} — {e['title']} ({e['units']}u{hrs_str}){tag}")
+            parts.append(f"    Description: {e['description']}")
+            parts.append("")
+
+    else:
+        # Scenario 1: Alternatives
+        parts.append(f"ALTERNATIVE COURSES TO {anchor_cid} — {anchor_title}")
+        parts.append(f"The student has NOT taken {anchor_cid} and wants courses covering similar topics.")
+        parts.append("")
+        parts.append("INSTRUCTIONS:")
+        parts.append("- Present all courses in a single ranked list (these are alternatives, not follow-ons).")
+        parts.append(f"- For each course, write ONE sentence explaining what it covers and how it")
+        parts.append(f"  relates to {anchor_cid}. Use the description — don't just say 'similar'.")
+        parts.append("- Show hours/week where available. If hours are 0 or missing, omit the field entirely.")
+        parts.append("- Mention blocked courses briefly as future goals with their missing prereqs.")
+        parts.append("- End with: 'Are you looking for something with the same theoretical depth,")
+        parts.append("  or more of a hands-on / project-based approach?'")
+        parts.append("- Do NOT suggest courses not in the lists below.")
+        parts.append("")
+        parts.append("RECOMMENDED ALTERNATIVES (prereqs met):\n")
+
+        for e in takeable:
+            hrs_str = f", ~{e['hours']:.0f} hrs/wk" if e["hours"] > 0 else ""
+            parts.append(f"  {e['cid']} — {e['title']} ({e['units']}u{hrs_str})  Similarity: {e['similarity']:.3f}")
+            parts.append(f"    Description: {e['description']}")
+            parts.append("")
+
+    if blocked:
+        parts.append("BLOCKED (prereqs not met — future goals):\n")
+        for e in blocked:
+            missing_str = ", ".join(e["missing_prereqs"][:3])
+            parts.append(f"  {e['cid']} — {e['title']} (needs: {missing_str})")
+        parts.append("")
+
+    return {"summary": "\n".join(parts), "scenario": "followon" if is_followon else "alternatives",
+            "anchor": anchor_cid, "takeable": takeable, "blocked": blocked}
 
 
 def get_feasible_candidates(profile):
@@ -1716,6 +2167,15 @@ class Chatbot:
         elif intent == Intent.SCHEDULING and data["course_ids"] and tool_context is None:
             result = execute_scheduling(data["course_ids"])
             tool_context = result.get("summary", "")
+
+        elif intent == Intent.COMPARISON and data["course_ids"] and tool_context is None:
+            result = execute_comparison(data["course_ids"], self.profile)
+            tool_context = result.get("summary", result.get("error", ""))
+
+        elif intent == Intent.RECOMMENDATION and data["course_ids"] and tool_context is None:
+            anchor = data["course_ids"][0]
+            result = execute_recommendation(anchor, self.profile)
+            tool_context = result.get("summary", result.get("error", ""))
 
         elif intent == Intent.SEMESTER_BUILD and data["course_ids"] and tool_context is None:
             if not self.profile.is_complete():

@@ -184,12 +184,13 @@ def create_chatbot():
                     title="Chat",
                     description="Ask me anything about MIT courses and degree planning!",
                     examples=[
-                        "Tell me about 6.3900",
-                        "What requirements do I still need for my major?",
-                        "What courses should I take next semester?",
-                        "I'm a 6-4 sophomore. I've taken 6.100A, 6.1010, 6.1200, 6.1210, 18.C06, 6.3700, and 6.3900. What should I focus on next?",
-                        "Can I graduate in 4 more semesters?",
-                        "What are the prereqs for 6.4200?",
+                        "I'm a 6-4 sophomore. I've taken 6.100A, 6.100B, 6.1010, 6.1200, 6.1210, 18.C06, 6.3700, and 6.3900. Help me plan my fall semester.",
+                        "I'm interested in ML and AI but I have a UROP so I want a lighter workload. What should I take?",
+                        "I finished 6.3900 and want to go deeper into ML. What should I take next?",
+                        "I can't fit 6.4100 into my schedule. What similar courses cover the same material?",
+                        "Compare 6.3900 and 6.4100 — which should I take first?",
+                        "What requirements do I still need for 6-4?",
+                        "Tell me about 6.4120 and 6.8610",
                     ],
                 )
 
